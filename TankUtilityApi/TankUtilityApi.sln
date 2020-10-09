@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankUtilityApiLib", "TankUtilityApiLib\TankUtilityApiLib.csproj", "{FBB76740-E8C0-418F-90F8-AC2E71C062E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankUtilityApiTests", "TankUtilityApiTests\TankUtilityApiTests.csproj", "{9E5DDA15-D4C6-4E83-ABF2-CAE7464D2009}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankUtilityTopicReader", "TankUtilityTopicReader\TankUtilityTopicReader.csproj", "{36B7D0CC-35C3-46E2-8C6F-DD853340D9D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyBitzApiLib", "SkyBitzApiLib\SkyBitzApiLib.csproj", "{E32FBCFB-3D33-4E3B-B6FF-946A82F7210C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyBitzApiTests", "SkyBitzApiTests\SkyBitzApiTests.csproj", "{40E908ED-1899-4CAB-AAF6-ED9549F3C6CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBB76740-E8C0-418F-90F8-AC2E71C062E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBB76740-E8C0-418F-90F8-AC2E71C062E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBB76740-E8C0-418F-90F8-AC2E71C062E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBB76740-E8C0-418F-90F8-AC2E71C062E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E5DDA15-D4C6-4E83-ABF2-CAE7464D2009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E5DDA15-D4C6-4E83-ABF2-CAE7464D2009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E5DDA15-D4C6-4E83-ABF2-CAE7464D2009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E5DDA15-D4C6-4E83-ABF2-CAE7464D2009}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36B7D0CC-35C3-46E2-8C6F-DD853340D9D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36B7D0CC-35C3-46E2-8C6F-DD853340D9D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36B7D0CC-35C3-46E2-8C6F-DD853340D9D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36B7D0CC-35C3-46E2-8C6F-DD853340D9D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E32FBCFB-3D33-4E3B-B6FF-946A82F7210C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E32FBCFB-3D33-4E3B-B6FF-946A82F7210C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E32FBCFB-3D33-4E3B-B6FF-946A82F7210C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E32FBCFB-3D33-4E3B-B6FF-946A82F7210C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40E908ED-1899-4CAB-AAF6-ED9549F3C6CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40E908ED-1899-4CAB-AAF6-ED9549F3C6CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40E908ED-1899-4CAB-AAF6-ED9549F3C6CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40E908ED-1899-4CAB-AAF6-ED9549F3C6CB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {497F76DF-C1B6-4754-A3F7-3C1C142CC183}
+	EndGlobalSection
+EndGlobal
