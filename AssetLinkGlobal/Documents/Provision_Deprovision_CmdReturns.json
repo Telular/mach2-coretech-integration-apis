@@ -1,0 +1,131 @@
+Provision:
+[{
+	"result": "success",
+	"objects": {
+		"Devices": [{
+			"device": {
+				"deviceid": <deviceid>,
+				"system": "ISB",
+				"esn": "<esn>",
+				"name": "<device name>",
+				"lasttx": 35182539,
+				"lasttxtime": "2020-01-22T17:04:00Z",
+				"current": {
+					"Lat": <Lat>,
+					"Lon": <Lon>,
+					"mode": 2,
+					"cmdtag": "BM",
+					"script": null,
+					"LastCom": {
+						"ALL": "2020-01-22T17:06:00Z",
+						"ISB": "2020-01-22T17:06:00Z",
+						"VIA": "ISB"
+					},
+					"configc": 14,
+					"geofence": {
+						"I": {
+							"map": {
+								"set": "I",
+								"color": "green",
+								"fence": 3802,
+								"Geofence": "Green; closest to Fence 3802"
+							},
+							"momid": "30117880",
+							"changed": "2019-06-10T16:40:32Z",
+							"transitid": null
+						}
+					},
+					"OutgoingMbx": []
+				},
+				"extras": {
+					"plan": {
+						"name": "SBD Track 3.2 KB",
+						"started": "2020-01-22T17:56:23Z",
+						"priorname": "DEACTIVE",
+						"priorstarted": "2020-01-22T17:52:18Z"
+					},
+					"configid": "2796",
+					"menu_variants": "MSLB,Motion2,Motion,"
+				},
+				"CLASS": "AP3i25",
+				"parent": [{
+					"grpid": 1167,
+					"name": "<parent group name>"
+				}]
+			},
+			"result": ""
+		}],
+		"DevicesLimited": 1
+	},
+	"data": []
+}]
+
+
+
+
+
+Deprovision:
+
+[{
+	"result": "success",
+	"objects": {
+		"Devices": [{
+			"device": {
+				"deviceid": <deviceid>,
+				"system": "ISB",
+				"esn": "<esn>",
+				"name": "<device name>",
+				"lasttx": 35182539,
+				"lasttxtime": "2020-01-22T17:04:00Z",
+				"current": {
+					"Lat": <Lat>,
+					"Lon": <Lon>,
+					"mode": 2,
+					"cmdtag": "BM",
+					"script": null,
+					"LastCom": {
+						"ALL": "2020-01-22T17:06:00Z",
+						"ISB": "2020-01-22T17:06:00Z",
+						"VIA": "ISB"
+					},
+					"configc": 14,
+					"geofence": {
+						"I": {
+							"map": {
+								"set": "I",
+								"color": "green",
+								"fence": 3802,
+								"Geofence": "Green; closest to Fence 3802"
+							},
+							"momid": "30117880",
+							"changed": "2019-06-10T16:40:32Z",
+							"transitid": null
+						}
+					},
+					"OutgoingMbx": []
+				},
+				"extras": {
+					"plan": {
+						"name": "DEACTIVE",
+						"started": "2020-01-22T17:32:49Z",
+						"priorname": "SBD Track 3.2 KB",
+						"priorstarted": "2020-01-22T17:23:54Z"
+					},
+					"configid": "2796",
+					"menu_variants": "MSLB,Motion2,Motion,"
+				},
+				"CLASS": "AP3i25",
+				"parent": [{
+					"grpid": 1167,
+					"name": "<parent group name>"
+				}]
+			},
+			"result": ""
+		}],
+		"DevicesLimited": 1
+	},
+	"data": []
+}]
+
+
+
