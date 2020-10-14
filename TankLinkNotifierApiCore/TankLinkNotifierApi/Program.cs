@@ -15,15 +15,13 @@ namespace TankLinkNotifierApi
     public class Program
     {
         public static void Main(string[] args)
-        {
-            //CreateHostBuilder(args).Build().Run();
-
+        {           
             Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
             .Enrich.FromLogContext()
             // use the line below to write JSON for structured logging event servers.
             //.WriteTo.Console(new RenderedCompactJsonFormatter())
-            .WriteTo.Console()
+            .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level}] {Message}{NewLine}{Exception}")               
             .WriteTo.File(new RenderedCompactJsonFormatter(),
                 @".\logs\log.skybitzapi.json",
                 fileSizeLimitBytes: 10_000_000,
