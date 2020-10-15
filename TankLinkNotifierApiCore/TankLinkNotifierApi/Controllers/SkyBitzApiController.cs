@@ -180,7 +180,7 @@ namespace TankLinkNotifierApi.Controllers
         
         private async Task<TankIdValidationResponse> ValidateTankId(string tankId)
         {
-            TankIdValidationResponse validationResonse = new TankIdValidationResponse();
+            TankIdValidationResponse validationResponse = new TankIdValidationResponse();
             
 
             try
@@ -199,18 +199,18 @@ namespace TankLinkNotifierApi.Controllers
                     var apiResponse = await _tankUtilityApi.GetDeviceAsync(tankId?.ToUpper());
 
                     // Mark the validation response.
-                    validationResonse.Success = apiResponse.Success;
-                    validationResonse.ErrorMessage = apiResponse.ErrorMessage;
+                    validationResponse.Success = apiResponse.Success;
+                    validationResponse.ErrorMessage = apiResponse.ErrorMessage;
 
                     // if successfully retrieved from Tank Utility add both long and short id's to the cache.
-                    if (validationResonse.Success)
+                    if (validationResponse.Success)
                     {
                         // Make sure we have data.
                         if (apiResponse.Data as DeviceResponse != null)
                         {
                             // Set the short and long id in the validation response.
-                            validationResonse.ShortTankId = (apiResponse.Data as DeviceResponse).Device.ShortDeviceId.ToUpper();
-                            validationResonse.LongTankId = (apiResponse.Data as DeviceResponse).Device.DeviceId;
+                            validationResponse.ShortTankId = (apiResponse.Data as DeviceResponse).Device.ShortDeviceId.ToUpper();
+                            validationResponse.LongTankId = (apiResponse.Data as DeviceResponse).Device.DeviceId;
 
 
                             var cachEntryOptions = new DistributedCacheEntryOptions();
@@ -219,8 +219,8 @@ namespace TankLinkNotifierApi.Controllers
                             cachEntryOptions.SetAbsoluteExpiration(TimeSpan.FromDays(30));
 
                             // Store the cache key and data (data is a comma separated string pair formatted as:  "{tank short id},{tank long id}").
-                            await _distributedCache.SetStringAsync($"{_cacheKeyPrefix}{validationResonse.ShortTankId}", $"{validationResonse.ShortTankId},{validationResonse.LongTankId}", cachEntryOptions);
-                            await _distributedCache.SetStringAsync($"{_cacheKeyPrefix}{validationResonse.LongTankId}", $"{validationResonse.ShortTankId},{validationResonse.LongTankId}", cachEntryOptions);
+                            await _distributedCache.SetStringAsync($"{_cacheKeyPrefix}{validationResponse.ShortTankId}", $"{validationResponse.ShortTankId},{validationResponse.LongTankId}", cachEntryOptions);
+                            await _distributedCache.SetStringAsync($"{_cacheKeyPrefix}{validationResponse.LongTankId}", $"{validationResponse.ShortTankId},{validationResponse.LongTankId}", cachEntryOptions);
                         }                        
                     }
                 }
@@ -229,10 +229,10 @@ namespace TankLinkNotifierApi.Controllers
                     // Split the cache entry.  Cach entry is a comma separated string pair formatted as:  "{tank short id},{tank long id}"
                     tankIds = tankIdCacheEntry.Split(',');
                     // Make sure it has two strings.
-                    validationResonse.Success = (tankIds?.Length ?? 0) == 2;
+                    validationResponse.Success = (tankIds?.Length ?? 0) == 2;
                     // Set the short and long id in the validation response.
-                    validationResonse.ShortTankId = tankIds[0];
-                    validationResonse.LongTankId = tankIds[1];
+                    validationResponse.ShortTankId = tankIds[0];
+                    validationResponse.LongTankId = tankIds[1];
                 }
                                 
             }
@@ -241,11 +241,11 @@ namespace TankLinkNotifierApi.Controllers
                 _logger.LogError($"Tank Id Validation:  Tank Id:  {tankId} - {anException.Message} {anException?.InnerException?.Message}");
                 
 
-                validationResonse.Success = false;                
-                validationResonse.ErrorMessage = $"Tank Id Validation:  Tank Id:  {tankId} -  {anException.Message} {anException?.InnerException?.Message}";                
+                validationResponse.Success = false;                
+                validationResponse.ErrorMessage = $"Tank Id Validation:  Tank Id:  {tankId} -  {anException.Message} {anException?.InnerException?.Message}";                
             }
 
-            return validationResonse;
+            return validationResponse;
         }
     }
 

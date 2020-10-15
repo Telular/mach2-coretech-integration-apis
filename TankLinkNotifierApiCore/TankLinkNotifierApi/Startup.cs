@@ -62,9 +62,7 @@ namespace TankLinkNotifierApi
             else                
             {
                 app.UseExceptionHandler("/error");
-            }
-
-            app.UseSerilogRequestLogging();
+            }           
 
             app.UseHttpsRedirection();
            
