@@ -35,7 +35,7 @@ namespace TankLinkNotifierApi.TankUtilityApi
 
         #region Constructors
 
-        public TankUtilityApi(IConfiguration configuration, IMemoryCache memoryCache, ILogger<ServiceBusTopicSender> logger)
+        public TankUtilityApi(IConfiguration configuration, IMemoryCache memoryCache, ILogger<TankUtilityApi> logger)
         {
             try
             {
