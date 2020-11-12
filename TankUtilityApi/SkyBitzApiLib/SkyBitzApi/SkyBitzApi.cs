@@ -166,8 +166,10 @@ namespace SkyBitzApiLib.SkyBitzApi
             {
                 IFlurlClient aClient = _fluentClientFactoryBaseUrl.Get(_apiConfig.ApiUrl);
 
+                var bearerToken = await GetBearerAuthHeaderValue();
+
                 System.Net.Http.HttpResponseMessage apiResponse = await aClient.Request($"{tankId}", "reading")                     
-                                                                        .WithOAuthBearerToken(await GetBearerAuthHeaderValue())
+                                                                        .WithOAuthBearerToken(bearerToken)
                                                                         .PostJsonAsync(tankReading);
 
                 //System.Net.Http.HttpResponseMessage apiResponse = await _apiConfig.ApiUrl

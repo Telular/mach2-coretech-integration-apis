@@ -223,7 +223,7 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
-                for (int i = 0; i < 5000; i++)
+                for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += .01;
 
@@ -265,7 +265,7 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
-                for (int i = 0; i < 5000; i++)
+                for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     var postResponse = await skyBitzApi.PostDeviceConfigChangeAsync(SkyBitzApiTestParams.GoodDeviceShortId, newConfigChange);
 
@@ -284,7 +284,7 @@ namespace SkyBitzApiTests
         [TestMethod]
         public async Task Test_PostBothEndpoints_LoopTest()
         {
-            double readingPercent = 22.75;
+            double readingPercent = 22.75;            
 
             try
             {
@@ -312,21 +312,24 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
-                for (int i = 0; i < 5000; i++)
+                for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += .01;
 
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
 
-                    var readingPostResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);                    
+                    
+
+                    var readingPostResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);                                          
 
                     Assert.IsTrue(readingPostResponse?.Success == true, $"POST Tank Reading Response Failed:  {readingPostResponse.ErrorTitle} - {readingPostResponse.ErrorMessage}");
 
-                    var configPostResponse = await skyBitzApi.PostDeviceConfigChangeAsync(SkyBitzApiTestParams.GoodDeviceShortId, newConfigChange);                    
+                    var configPostResponse = await skyBitzApi.PostDeviceConfigChangeAsync(SkyBitzApiTestParams.GoodDeviceShortId, newConfigChange);
 
                     Assert.IsTrue(configPostResponse?.Success == true, $"POST Device Config Change Response Failed:  {configPostResponse.ErrorTitle} - {configPostResponse.ErrorMessage}");
                 }
+               
             }
             catch (Exception anException)
             {
@@ -336,7 +339,7 @@ namespace SkyBitzApiTests
         }
 
         [TestMethod]
-        public void Test_PostBothEndpoints_LoopTest2()
+        public void Test_PostBothEndpoints_LoopTest_Parallel()
         {
             double readingPercent = 22.75;
 
@@ -366,7 +369,7 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
-                for (int i = 0; i < 5000; i++)
+                for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += .01;
 
@@ -383,9 +386,8 @@ namespace SkyBitzApiTests
                     var configTask3 = skyBitzApi.PostDeviceConfigChangeAsync(SkyBitzApiTestParams.GoodDeviceShortId, newConfigChange);
                     var configTask4 = skyBitzApi.PostDeviceConfigChangeAsync(SkyBitzApiTestParams.GoodDeviceLongId, newConfigChange);
 
-                    Task.WaitAll(new Task[] { readingTask1, readingTask2, readingTask3, readingTask4, configTask1,  configTask2, configTask3, configTask4 });
+                    Task.WaitAll(new Task[] { readingTask1, readingTask2, readingTask3, readingTask4, configTask1,  configTask2, configTask3, configTask4 });                    
 
-                  
 
                     Assert.IsTrue(readingTask1.Result?.Success == true, $"POST Tank Reading Response Failed:  {readingTask1.Result?.ErrorTitle} - {readingTask1.Result?.ErrorMessage}");
                     Assert.IsTrue(readingTask2.Result?.Success == true, $"POST Tank Reading Response Failed:  {readingTask2.Result?.ErrorTitle} - {readingTask2.Result?.ErrorMessage}");

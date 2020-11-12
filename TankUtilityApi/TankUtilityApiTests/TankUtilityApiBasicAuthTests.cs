@@ -43,6 +43,51 @@ namespace TankUtilityApiTests
         }
 
         [TestMethod]
+        public async Task Test_GetDevicesAndIdsAsync()
+        {
+            try
+            {
+
+                var response = await tankUtilityApi.GetDevicesAsync();
+
+                Assert.IsTrue(response != null);
+
+                Assert.IsTrue(response.Success, $"Get Devices Response Failed:  {response.ErrorTitle} - {response.ErrorMessage}");
+                Assert.IsTrue(response.Data != null);
+
+                var devicesResponse = response.Data as DevicesResponse;
+
+                Assert.IsNotNull(devicesResponse);
+
+                Assert.IsNotNull(devicesResponse.Devices);
+
+                foreach(var aLongDeviceId in devicesResponse.Devices)
+                {
+                    var getDeviceResponse = await tankUtilityApi.GetDeviceAsync(aLongDeviceId);
+
+                    Assert.IsTrue(getDeviceResponse != null);
+
+                    Assert.IsTrue(getDeviceResponse.Success, $"Get Device Response Failed:  {getDeviceResponse.ErrorTitle} - {getDeviceResponse.ErrorMessage}");
+                    Assert.IsTrue(getDeviceResponse.Data != null);
+
+                    var deviceResponse = getDeviceResponse.Data as DeviceResponse;
+
+                    Assert.IsNotNull(deviceResponse);
+
+                    var device = deviceResponse.Device;
+
+                    Console.WriteLine($"Short Tank Id:  {device.ShortDeviceId}  Long Device Id:  {device.DeviceId}");
+                }
+
+                Assert.IsTrue(devicesResponse.Devices.Any());
+            }
+            catch (Exception anException)
+            {
+                Assert.Fail($"Get Devices Exception:  {anException.Message}  {anException?.InnerException?.Message}");
+            }
+        }
+
+        [TestMethod]
         public async Task Test_GetDeviceAsync()
         {
             try
