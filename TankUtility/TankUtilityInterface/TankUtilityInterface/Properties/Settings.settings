@@ -1,0 +1,48 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TankUtilityInterface.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ApplicationType" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Development</Value>
+    </Setting>
+    <Setting Name="LogFilePath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\Telchifil001\Share\DevLogFiles\CommPktMgrSP</Value>
+    </Setting>
+    <Setting Name="RecoveryFilePath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\Telchifil001\Share\DevLogFiles\CommPktMgrSP</Value>
+    </Setting>
+    <Setting Name="RemotingRxURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">tcp://VTLAppsD1:2058/CPInterface</Value>
+    </Setting>
+    <Setting Name="RemotingTxPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">50980</Value>
+    </Setting>
+    <Setting Name="RemotingTxService" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">TankUtilityInterface</Value>
+    </Setting>
+    <Setting Name="TopicConnection" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;SharedAccessKeyName=Mach2DefaultPolicy;SharedAccessKey=DpSG3fgp1AgKQ8401s7tOB8YD0PPA1pd17g+6AmdJsA=;EntityPath=mo-devicemessages-tank-development2</Value>
+    </Setting>
+    <Setting Name="TopicName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">mo-devicemessages-tank-development2</Value>
+    </Setting>
+    <Setting Name="SubscriptionName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">DefaultSubscription</Value>
+    </Setting>
+    <Setting Name="RemotingRxOnlineTimeout" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="RemotingRXReplyTimeout" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="GetMessagePollTime" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10000</Value>
+    </Setting>
+    <Setting Name="MTRestURI" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://mach2-coretech-mtwebapi-development.azurewebsites.net/api/passthrough/New/urn:TankLTE:esn:</Value>
+    </Setting>
+    <Setting Name="MSGDeviceIDPrefix" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">urn:TankLTE:esn:</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
