@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommPkt">
-      <HintPath>..\CommPkt.dll</HintPath>
+      <HintPath>..\..\TankUtility\TankUtilityInterface\CommPkt.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Azure.Amqp, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Azure.Amqp.2.4.6\lib\net45\Microsoft.Azure.Amqp.dll</HintPath>
@@ -146,10 +146,14 @@
     <Compile Include="frmTankUtilityInterface.Designer.cs">
       <DependentUpon>frmTankUtilityInterface.cs</DependentUpon>
     </Compile>
+    <Compile Include="Payload.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TelularMessage.cs" />
-    <Compile Include="TelularMessageProperty.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="frmTankUtilityInterface.resx">
       <DependentUpon>frmTankUtilityInterface.cs</DependentUpon>
     </EmbeddedResource>
@@ -167,11 +171,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

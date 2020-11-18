@@ -16,9 +16,13 @@ using System.Net.Http.Headers;
 using System.Net;
 using Newtonsoft.Json;
 using Microsoft.ServiceBus.Messaging;
+using System.IO;
+
+//using Microsoft.ServiceBus.Messaging;
 
 namespace TankUtilityInterface
 {
+    
     #region Header Comments
     //*********************************************************************************************
     // FrmAzureInterface Class
@@ -58,7 +62,7 @@ namespace TankUtilityInterface
             // The Port number and Service name are saved in the AzureInterface.exe.config file,
             // see Settings.settings "RemotingTxPort" and "RemotingTxService".
             // The remoting object definition is in the CommPkt class library (dll).
-            TcpChannel channel = new TcpChannel(Properties.Settings.Default.RemotingTxPort);
+            TcpChannel channel = new TcpChannel(Convert.ToInt32(Properties.Settings.Default.RemotingTxPort)); //todo:
             ChannelServices.RegisterChannel(channel, false);
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(CPInterface), Properties.Settings.Default.RemotingTxService, WellKnownObjectMode.Singleton);
             CommPkt.Cache.Attach(this);
@@ -136,9 +140,9 @@ namespace TankUtilityInterface
         {
             try
             {
-                // If Comm Packet Manager in not online 
+                // If Comm Packet Manager in not online todo:
                 string sCommPktMgrURL = Properties.Settings.Default.RemotingRxURL;
-                if (!CommPkt.Log.IsServerOnline(sCommPktMgrURL, Properties.Settings.Default.RemotingRxOnlineTimeout))
+                if (!CommPkt.Log.IsServerOnline(sCommPktMgrURL, Convert.ToInt32(Properties.Settings.Default.RemotingRxOnlineTimeout)))
                 {
                     throw new ArgumentException("Unreachable Remoting PC:" + sCommPktMgrURL);
                 }
@@ -451,8 +455,7 @@ namespace TankUtilityInterface
             // Add line to log file that application is closing
             Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "AzureInterface.exe: Application Stopped, Due to: " + e.CloseReason.ToString());
         }
-
-
+       
         #region Header Comments
         //*********************************************************************************************
         // bkgWorkerRx_DoWork
@@ -468,7 +471,7 @@ namespace TankUtilityInterface
         #endregion
         private void bkgWorkerRx_DoWork(object sender, DoWorkEventArgs e)
         {
-            int iGetMessagePollTime = Properties.Settings.Default.GetMessagePollTime;
+            int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
 
             // Check for Rx Channel work to do forever
             for (; ; )
@@ -492,12 +495,16 @@ namespace TankUtilityInterface
                     // Init the connection to the Service Bus Topic
                     mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
 
+                  
                     // Create On Message Handler
                     mobileOriginateSubClient.OnMessage(message =>
-                    {
-                        string sBody;
+                    {                      
                         string sTankDeviceIdPrefix = Properties.Settings.Default.MSGDeviceIDPrefix;
-                        DeviceActor.Common.DataContracts.TelularMessage telularMessage = null;
+                        Payload tuMessage = null;
+                        var sData = new StringBuilder();
+                        Stream stream;
+                        StreamReader reader;
+                        string messageJson;
 
                         // If Client is closed then return
                         if (mobileOriginateSubClient.IsClosed)
@@ -507,124 +514,100 @@ namespace TankUtilityInterface
                         }
 
                         try
-                        {
-                            sBody = message.GetBody<String>();
-                            AddDebugLogItem(sBody);
-                            telularMessage = JsonConvert.DeserializeObject<DeviceActor.Common.DataContracts.TelularMessage>(sBody);
+                        {                         
+                            stream = message.GetBody<Stream>();
+                            reader = new StreamReader(stream);
+                            messageJson = reader.ReadToEnd();
+                            AddDebugLogItem(messageJson);
+                            tuMessage = JsonConvert.DeserializeObject<Payload>(messageJson);
                         }
                         catch (Exception ex1)
                         {
                             AddlistViewStatusItem("OnMessage, DeserializeObject Exception!: " + ex1.Message, Color.Red);
                             return;
                         }
-                        if (telularMessage == null)
+                        if (tuMessage == null)
                         {
                             AddlistViewStatusItem("OnMessage, DeserializeObject Error! Null object returned", Color.Red);
                             return;
                         }
-
                         // If not the "Tank" prefix in DeviceID then ignore message
-                        string sDeviceID = telularMessage.DeviceID;
-                        if (!sDeviceID.Contains(sTankDeviceIdPrefix))
+                        string sTankID = tuMessage.TankId;
+                        sData.Append("[");
+
+                        foreach(string tankdatavalue in tuMessage.Data.Keys)
                         {
-                            AddDebugLogItem("OnMessage, Bad DeviceID field: " + sDeviceID);
-                            return;
-                        }
-
-                        // Else get Tank RTU number and remove any white spaces
-                        sDeviceID = sDeviceID.Substring(sDeviceID.IndexOf(sTankDeviceIdPrefix, 0) + sTankDeviceIdPrefix.Length);
-                        sDeviceID = sDeviceID.Trim();
-
-                        // If no elements in Properties array then ignore message
-                        if (null == telularMessage.Properties || 0 == telularMessage.Properties.Count)
-                        {
-                            AddlistViewStatusItem("OnMessage, No elements in the Properties Array, Device: " + sDeviceID, Color.Red);
-                            return;
-                        }
-
-                        // Else assume first element contains the pass through message
-                        DeviceActor.Common.DataContracts.TelularMessageProperty telularMessageProperty = telularMessage.Properties[0];
-
-                        // If still no properties or parentid is null then ignore message
-                        if (null == telularMessageProperty || null == telularMessageProperty.parentid)
-                        {
-                            AddDebugLogItem("OnMessage, Null Property or null parentid, Device: " + sDeviceID);
-                            return;
-                        }
-
-                        string sParentID = telularMessageProperty.parentid;
-
-                        // If not a pass-through object then ignore message
-                        if (!sParentID.Contains("25000"))
-                        {
-                            AddDebugLogItem("OnMessage, Not a Pass-Through ParentID value: " + sParentID + " Device:" + sDeviceID);
-                            return;
-                        }
-
-                        // If value is null then ignore message
-                        if (null == telularMessageProperty.value)
-                        {
-                            AddlistViewStatusItem("OnMessage, Null value string, Device: " + sDeviceID, Color.Red);
-                            return;
-                        }
-
-                        // If zero length Value then ignore message
-                        if (0 == telularMessageProperty.value.Length)
-                        {
-                            AddlistViewStatusItem("OnMessage, Empty string in value field, Device:" + sDeviceID, Color.Red);
-                            return;
-                        }
-
-                        // Else parse the "Value" string (comma seperated decimal values) for body of message to ASCIIHEX
-                        try
-                        {
-                            byte[] baData = Array.ConvertAll(telularMessageProperty.value.Split(','), byte.Parse);
-                            sBody = ">";
-                            foreach (byte bData in baData)
+                            if (tankdatavalue.ToLower().Contains("percent"))
                             {
-                                sBody += String.Format("{0:X}{1:X}", bData >> 4, bData & 0x0f);
+                                sData.Append("PC,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);                              
                             }
-                            // Framework may pass one too many bytes, validate the length by looking at first byte value of the message
-                            if ((baData[0] + 4) == baData.Length)
+                            if (tankdatavalue.ToLower().Contains("gross volume"))
                             {
-                                sBody = sBody.Substring(0, sBody.Length - 2);
-                                AddDebugLogItem("OnMessage, Removing extra byte Length: " + baData[0].ToString());
+                                sData.Append(" GV,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);
                             }
+                            if (tankdatavalue.ToLower().Contains("gross level"))
+                            {
+                                sData.Append(" GL,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);
+                            }
+                            if (tankdatavalue.ToLower().Contains("temperature"))
+                            {
+                                sData.Append(" TP,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);                               
+                            }
+                            if (tankdatavalue.ToLower().Contains("net volume"))
+                            {
+                                sData.Append(" NV,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);
+                            }
+                            if (tankdatavalue.ToLower().Contains("aux"))
+                            {
+                                sData.Append(" AL,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);                               
+                            }
+                            if (tankdatavalue.ToLower().Contains("alarm"))
+                            {
+                                sData.Append(" AB,");
+                                sData.Append(tuMessage.Data[tankdatavalue]);                              
+                            }                             
                         }
-                        catch (Exception ex2)
-                        {
-                            AddlistViewStatusItem("OnMessage, Error converting decimal string to hex string, Device: " + sDeviceID + " Error:" + ex2.Message, Color.Red);
-                            return;
-                        }
-
+                       
                         // If UTCCreatedTimestamp is null then ignore message
-                        if (null == telularMessage.UTCCreatedTimestamp)
+                        if (null == tuMessage.ReceivedOn)
                         {
-                            AddlistViewStatusItem("OnMessage, Null UTCCreatedTimestamp, Device: " + sDeviceID, Color.Red);
+                            AddlistViewStatusItem("OnMessage, Null UTCCreatedTimestamp, Device: " + sTankID, Color.Red);
                             return;
                         }
-
+                        
                         // Create message object for queueing
                         CommPkt.CPMessage cpMsg = new CommPkt.CPMessage();
-
-                        cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.AI;
+                        cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI; 
+                       // cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.FEED;
                         cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
-                        cpMsg.sSourceNumber = sDeviceID;
+                        
+#if DEBUG                        
+                        cpMsg.sSourceNumber = "139";
+#else
+                        cpMsg.sSourceNumber = sTankID; //todo:
+#endif
                         cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
                         cpMsg.iSequence = 0;
-                        cpMsg.dtUTCTimeStamp = telularMessage.UTCCreatedTimestamp;
-                        cpMsg.iDataLen = sBody.Length;
+                        cpMsg.dtUTCTimeStamp = tuMessage.ReceivedOn;
+                        cpMsg.iDataLen = sData.Length;
                         cpMsg.iErrorCode = 0;
                         cpMsg.iNetworkErrCode = 0;
-                        cpMsg.sData = sBody;
+                        cpMsg.sData = sData.ToString();
                         cpMsg.iSMPPChannelID = 0;
 
                         // Queue message and set new work event
                         qReceive.Enqueue(cpMsg);
                         eventNewRxWork.Set();
 
+                        mobileOriginateSubClient.Complete(message.LockToken);
                         // Display message
-                        AddListViewMsgItem("Rx", telularMessage.UTCCreatedTimestamp, sDeviceID, sBody, Color.Black);
+                        AddListViewMsgItem("Rx", tuMessage.ReceivedOn, sTankID, messageJson, Color.Black);
                     });
 
                     // Check for SMS messages
@@ -664,19 +647,7 @@ namespace TankUtilityInterface
                 }
             }
         }
-
-        #region Header Comments
-        //*********************************************************************************************
-        // bkgWorkerTx_DoWork
-        //
-        // PURPOSE: The bkgWorkerTx_DoWork sends MT messages to NPhaseOne.
-        // 
-        // USES:      qTransmit:
-        //            eventNewTxWork:
-        //            sLoginSessionToken:
-        // 
-        //*********************************************************************************************
-        #endregion
+             
         private void bkgWorkerTx_DoWork(object sender, DoWorkEventArgs e)
         {
             CPMessage cpMsg;

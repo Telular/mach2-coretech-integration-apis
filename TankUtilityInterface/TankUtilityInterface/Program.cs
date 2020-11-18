@@ -17,12 +17,12 @@ namespace TankUtilityInterface
         {
             // Use Mutex to stop multiple versions of application from running 
             bool bMutexWasCreated;
-            Mutex m = new Mutex(true, "Global\\AzureInterface", out bMutexWasCreated);
+            Mutex m = new Mutex(true, "Global\\TankUtilityInterface", out bMutexWasCreated);
 
             // If can't create mutex then application is already running so warn user and close
             if (!bMutexWasCreated)
             {
-                MessageBox.Show("Error! Multiple Starts of AzureInterface.exe Closing application", "AzureInterface");
+                MessageBox.Show("Error! Multiple Starts of AzureInterface.exe Closing application", "TankUtilityInterface");
                 return;
             }
             Application.EnableVisualStyles();
