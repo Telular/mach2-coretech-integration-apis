@@ -62,15 +62,15 @@ namespace TankUtilityInterface.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50980")]
-        public int RemotingTxPort {
+        public string RemotingTxPort {
             get {
-                return ((int)(this["RemotingTxPort"]));
+                return ((string)(this["RemotingTxPort"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TankUtilityInterface")]
+        [global::System.Configuration.DefaultSettingValueAttribute("AzureInterface")]
         public string RemotingTxService {
             get {
                 return ((string)(this["RemotingTxService"]));
@@ -79,57 +79,28 @@ namespace TankUtilityInterface.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;Share" +
-            "dAccessKeyName=Mach2DefaultPolicy;SharedAccessKey=DpSG3fgp1AgKQ8401s7tOB8YD0PPA1" +
-            "pd17g+6AmdJsA=;EntityPath=mo-devicemessages-tank-development2")]
-        public string TopicConnection {
-            get {
-                return ((string)(this["TopicConnection"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mo-devicemessages-tank-development2")]
-        public string TopicName {
-            get {
-                return ((string)(this["TopicName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("DefaultSubscription")]
-        public string SubscriptionName {
-            get {
-                return ((string)(this["SubscriptionName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public int RemotingRxOnlineTimeout {
+        public string RemotingRxOnlineTimeout {
             get {
-                return ((int)(this["RemotingRxOnlineTimeout"]));
+                return ((string)(this["RemotingRxOnlineTimeout"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public int RemotingRXReplyTimeout {
+        public string RemotingRXReplyTimeout {
             get {
-                return ((int)(this["RemotingRXReplyTimeout"]));
+                return ((string)(this["RemotingRXReplyTimeout"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10000")]
-        public int GetMessagePollTime {
+        public string GetMessagePollTime {
             get {
-                return ((int)(this["GetMessagePollTime"]));
+                return ((string)(this["GetMessagePollTime"]));
             }
         }
         
@@ -149,6 +120,35 @@ namespace TankUtilityInterface.Properties {
         public string MSGDeviceIDPrefix {
             get {
                 return ((string)(this["MSGDeviceIDPrefix"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("TANK-UTILITY-READINGS")]
+        public string SubscriptionName {
+            get {
+                return ((string)(this["SubscriptionName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;Share" +
+            "dAccessKeyName=RootSendListenOnlyAccessKey;SharedAccessKey=YA4CVZJXDDcwI6YaHQ8/O" +
+            "OXLzP4IMwg0itsalB/tSiQ=;EntityPath=mo-devicemessages-tankutlity-topic")]
+        public string TopicConnection {
+            get {
+                return ((string)(this["TopicConnection"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("mo-devicemessages-tankutlity-topic")]
+        public string TopicName {
+            get {
+                return ((string)(this["TopicName"]));
             }
         }
     }
