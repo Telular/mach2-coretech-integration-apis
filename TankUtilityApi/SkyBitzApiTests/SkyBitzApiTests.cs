@@ -212,6 +212,7 @@ namespace SkyBitzApiTests
         public async Task Test_PostTankReading_LoopTest()
         {
             double readingPercent = 22.75;
+            int counter = 1;
 
             try
             {
@@ -220,7 +221,8 @@ namespace SkyBitzApiTests
                     { "time", $"{DateTime.UtcNow.ToString("o")}" },
                     { "percent", readingPercent },
                     { "event_code", "thresh_1_trip" },
-                    { "telular_test", true }
+                    { "telular_test", true },
+                    { "telular_test_counter", $"{counter}" }
                 };
 
                 for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
@@ -229,6 +231,7 @@ namespace SkyBitzApiTests
 
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
+                    newReading["telular_test_counter"] = $"{counter++}";
 
                     var postResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);
 
