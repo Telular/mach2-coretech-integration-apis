@@ -59,7 +59,7 @@ namespace TankUtilityInterface
 #endif
             // Create a server TCP channel for the remoting call from message sources.
             // Method SvrReceivedPacket() is the actual callback.
-            // The Port number and Service name are saved in the AzureInterface.exe.config file,
+            // The Port number and Service name are saved in the tankutili.exe.config file,
             // see Settings.settings "RemotingTxPort" and "RemotingTxService".
             // The remoting object definition is in the CommPkt class library (dll).
             TcpChannel channel = new TcpChannel(Convert.ToInt32(Properties.Settings.Default.RemotingTxPort)); //todo:
@@ -103,7 +103,7 @@ namespace TankUtilityInterface
         // SrvReceivedPacket
         //
         // PURPOSE:   The IObserver Member SrvReceivedPacket method is called by the remoting service
-        //            when a MT message is sent to the AzureInterface for transmission. 
+        //            when a MT message is sent to the TankUtilityInterface for transmission. 
         // 
         // USES:      qTransmit:
         //            eventNewTxWork:
@@ -231,7 +231,7 @@ namespace TankUtilityInterface
                 // If Error message then copy it to error log file
                 if (Color.Red == cText)
                 {
-                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "AzureInterface :" + sDirection + ":" + sDevice + ": 0 :" + sData);
+                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface :" + sDirection + ":" + sDevice + ": 0 :" + sData);
                 }
             }
         }
@@ -283,7 +283,7 @@ namespace TankUtilityInterface
                 // If Error message then copy it to error log file
                 if (Color.Red == cText)
                 {
-                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "AzureInterface :" + sStatus);
+                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface :" + sStatus);
                 }
 
             }
@@ -359,7 +359,7 @@ namespace TankUtilityInterface
             }
             else
             {
-                Log.ErrorToFile(Properties.Settings.Default.LogFilePath + "\\debuglog", sStatus);
+                Log.ErrorToFile(Properties.Settings.Default.LogFilePath + "\\TUI_DebugLog", sStatus);
             }
 #else
             return;
@@ -421,7 +421,7 @@ namespace TankUtilityInterface
 
         #region Header Comments
         //*********************************************************************************************
-        // FrmAzureInterface_FormClosing
+        // FrmTankUtilityInterface_FormClosing
         //
         // PURPOSE:   Handles the form closing event.
         //            Unchecks "Enable Login" to cause a logout to be sent.
@@ -431,7 +431,7 @@ namespace TankUtilityInterface
         // 
         //*********************************************************************************************
         #endregion
-        private void FrmAzureInterface_FormClosing(object sender, FormClosingEventArgs e)
+        private void FrmTankUtilityInterface_FormClosing(object sender, FormClosingEventArgs e)
         {
             // If it's the user closing (not windows closing or task manager closing it)
             //  and if currently Subscription is open, then close it, cancel app closing and tell users to try again
@@ -443,13 +443,13 @@ namespace TankUtilityInterface
                     {
                         mobileOriginateSubClient.Close();
                         e.Cancel = true;
-                        MessageBox.Show("Please try again after subscription close is complete!", "AzureInterface");
+                        MessageBox.Show("Please try again after subscription close is complete!", "TankUtilityInterface");
                         return;
                     }
                 }
             }
             // Add line to log file that application is closing
-            Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "AzureInterface.exe: Application Stopped, Due to: " + e.CloseReason.ToString());
+            Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface.exe: Application Stopped, Due to: " + e.CloseReason.ToString());
         }
        
         #region Header Comments

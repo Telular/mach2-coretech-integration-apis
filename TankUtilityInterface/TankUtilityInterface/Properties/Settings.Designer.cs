@@ -52,28 +52,10 @@ namespace TankUtilityInterface.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("tcp://VTLAppsD1:2058/CPInterface")]
-        public string RemotingRxURL {
-            get {
-                return ((string)(this["RemotingRxURL"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50980")]
         public string RemotingTxPort {
             get {
                 return ((string)(this["RemotingTxPort"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("AzureInterface")]
-        public string RemotingTxService {
-            get {
-                return ((string)(this["RemotingTxService"]));
             }
         }
         
@@ -134,21 +116,39 @@ namespace TankUtilityInterface.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;Share" +
-            "dAccessKeyName=RootSendListenOnlyAccessKey;SharedAccessKey=YA4CVZJXDDcwI6YaHQ8/O" +
-            "OXLzP4IMwg0itsalB/tSiQ=;EntityPath=mo-devicemessages-tankutlity-topic")]
-        public string TopicConnection {
+        [global::System.Configuration.DefaultSettingValueAttribute("mo-devicemessages-tankutlity-topic")]
+        public string TopicName {
             get {
-                return ((string)(this["TopicConnection"]));
+                return ((string)(this["TopicName"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mo-devicemessages-tankutlity-topic")]
-        public string TopicName {
+        [global::System.Configuration.DefaultSettingValueAttribute("tcp://VTLAppsD2:2058/CPInterface")]
+        public string RemotingRxURL {
             get {
-                return ((string)(this["TopicName"]));
+                return ((string)(this["RemotingRxURL"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("TankUtilityInterface")]
+        public string RemotingTxService {
+            get {
+                return ((string)(this["RemotingTxService"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-production.servicebus.windows.net/;Shared" +
+            "AccessKeyName=RootSendListenOnlyAccessKey;SharedAccessKey=qfn22/Xn8j/ZO+koeF/n79" +
+            "Hg/AGjH5BMJl8CY9HpeXI=")]
+        public string TopicConnection {
+            get {
+                return ((string)(this["TopicConnection"]));
             }
         }
     }
