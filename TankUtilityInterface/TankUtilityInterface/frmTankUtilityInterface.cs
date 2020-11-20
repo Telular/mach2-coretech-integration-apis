@@ -68,10 +68,10 @@ namespace TankUtilityInterface
             CommPkt.Cache.Attach(this);
 
             // Create transmit queue/worker for MT messages to send to NPhaseOne
-            qTransmit = Queue.Synchronized(new Queue());
+            /*qTransmit = Queue.Synchronized(new Queue());
             eventNewTxWork = new System.Threading.AutoResetEvent(false);
             bkgWorkerTx.RunWorkerAsync();
-
+            */
             // Create receive queue/worker for MO messages received from NPhaseOne
             qReceive = Queue.Synchronized(new Queue());
             eventNewRxWork = new System.Threading.AutoResetEvent(false);
@@ -92,8 +92,7 @@ namespace TankUtilityInterface
 
         public Queue qReceive;
         public System.Threading.AutoResetEvent eventNewRxWork;
-
-
+      
         //*********************************************************************************************
         // End of Public Vars.
         //*********************************************************************************************
@@ -417,10 +416,7 @@ namespace TankUtilityInterface
                     mobileOriginateSubClient.Close();
                     return;
                 }
-            }
-
-            return;
-
+            }         
         }
 
         #region Header Comments
@@ -472,6 +468,7 @@ namespace TankUtilityInterface
         private void bkgWorkerRx_DoWork(object sender, DoWorkEventArgs e)
         {
             int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
+            mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
 
             // Check for Rx Channel work to do forever
             for (; ; )
@@ -485,7 +482,7 @@ namespace TankUtilityInterface
                     // Initialize Azure Topic Subscription
                     OnMessageOptions options = new OnMessageOptions();
                     options.AutoComplete = true;
-                    options.AutoRenewTimeout = TimeSpan.FromMinutes(1);
+                    options.AutoRenewTimeout = TimeSpan.FromMinutes(1);                    
 #if DEBUG
                     // For debugging only one call at a time
                     options.MaxConcurrentCalls = 1;
@@ -493,123 +490,57 @@ namespace TankUtilityInterface
                     options.MaxConcurrentCalls = 5;
 #endif
                     // Init the connection to the Service Bus Topic
-                    mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
-
-                  
+                   if (mobileOriginateSubClient.IsClosed)
+                        mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
                     // Create On Message Handler
                     mobileOriginateSubClient.OnMessage(message =>
                     {                      
-                        string sTankDeviceIdPrefix = Properties.Settings.Default.MSGDeviceIDPrefix;
+                        string sTankDeviceIdPrefix = Properties.Settings.Default.MSGDeviceIDPrefix;                     
+                        var sData = new StringBuilder();                                                                      
+                        string messageJson = string.Empty;
+                        CPMessage cpMsg = null;
                         Payload tuMessage = null;
-                        var sData = new StringBuilder();
-                        Stream stream;
-                        StreamReader reader;
-                        string messageJson;
-
+                       
                         // If Client is closed then return
                         if (mobileOriginateSubClient.IsClosed)
                         {
                             AddlistViewStatusItem("OnMessage, SubscriptionClient Closed!", Color.Red);
                             return;
-                        }
-
+                        }                                             
                         try
-                        {                         
-                            stream = message.GetBody<Stream>();
-                            reader = new StreamReader(stream);
+                        {
+                            Stream stream = message.GetBody<Stream>();
+                            StreamReader reader = new StreamReader(stream);
                             messageJson = reader.ReadToEnd();
                             AddDebugLogItem(messageJson);
                             tuMessage = JsonConvert.DeserializeObject<Payload>(messageJson);
+                            if (tuMessage == null)
+                            {
+                                AddlistViewStatusItem("OnMessage, DeserializeObject Error! Null object returned", Color.Red);
+                                return;
+                            }  
+                            cpMsg = ProcessTUMessage(tuMessage);
                         }
                         catch (Exception ex1)
                         {
                             AddlistViewStatusItem("OnMessage, DeserializeObject Exception!: " + ex1.Message, Color.Red);
                             return;
                         }
-                        if (tuMessage == null)
-                        {
-                            AddlistViewStatusItem("OnMessage, DeserializeObject Error! Null object returned", Color.Red);
-                            return;
-                        }
-                        // If not the "Tank" prefix in DeviceID then ignore message
-                        string sTankID = tuMessage.TankId;
-                        sData.Append("[");
 
-                        foreach(string tankdatavalue in tuMessage.Data.Keys)
-                        {
-                            if (tankdatavalue.ToLower().Contains("percent"))
-                            {
-                                sData.Append("PC,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);                              
-                            }
-                            if (tankdatavalue.ToLower().Contains("gross volume"))
-                            {
-                                sData.Append(" GV,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);
-                            }
-                            if (tankdatavalue.ToLower().Contains("gross level"))
-                            {
-                                sData.Append(" GL,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);
-                            }
-                            if (tankdatavalue.ToLower().Contains("temperature"))
-                            {
-                                sData.Append(" TP,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);                               
-                            }
-                            if (tankdatavalue.ToLower().Contains("net volume"))
-                            {
-                                sData.Append(" NV,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);
-                            }
-                            if (tankdatavalue.ToLower().Contains("aux"))
-                            {
-                                sData.Append(" AL,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);                               
-                            }
-                            if (tankdatavalue.ToLower().Contains("alarm"))
-                            {
-                                sData.Append(" AB,");
-                                sData.Append(tuMessage.Data[tankdatavalue]);                              
-                            }                             
-                        }
-                       
                         // If UTCCreatedTimestamp is null then ignore message
-                        if (null == tuMessage.ReceivedOn)
+                        if (null == cpMsg.dtUTCTimeStamp)
                         {
-                            AddlistViewStatusItem("OnMessage, Null UTCCreatedTimestamp, Device: " + sTankID, Color.Red);
+                            AddlistViewStatusItem("OnMessage, Null UTCCreatedTimestamp, Device: " + tuMessage.TankId, Color.Red);
                             return;
                         }
-                        
-                        // Create message object for queueing
-                        CommPkt.CPMessage cpMsg = new CommPkt.CPMessage();
-                        cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI; 
-                       // cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.FEED;
-                        cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
-                        
-#if DEBUG                        
-                        cpMsg.sSourceNumber = "139";
-#else
-                        cpMsg.sSourceNumber = sTankID; //todo:
-#endif
-                        cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
-                        cpMsg.iSequence = 0;
-                        cpMsg.dtUTCTimeStamp = tuMessage.ReceivedOn;
-                        cpMsg.iDataLen = sData.Length;
-                        cpMsg.iErrorCode = 0;
-                        cpMsg.iNetworkErrCode = 0;
-                        cpMsg.sData = sData.ToString();
-                        cpMsg.iSMPPChannelID = 0;
-
                         // Queue message and set new work event
                         qReceive.Enqueue(cpMsg);
                         eventNewRxWork.Set();
-
-                        mobileOriginateSubClient.Complete(message.LockToken);
+                        
                         // Display message
-                        AddListViewMsgItem("Rx", tuMessage.ReceivedOn, sTankID, messageJson, Color.Black);
-                    });
-
+                        AddListViewMsgItem("Rx", tuMessage.ReceivedOn, tuMessage.TankId, messageJson, Color.Black);
+                    }, options);
+                    
                     // Check for SMS messages
                     try
                     {
@@ -644,10 +575,77 @@ namespace TankUtilityInterface
                 catch (Exception ex1)
                 {
                     AddlistViewStatusItem("bkgWorkerRx_DoWork, Unhandled Exception!: " + ex1.Message, Color.Red);
-                }
+                } 
             }
         }
              
+        private CPMessage ProcessTUMessage(Payload tuMessage)
+        {
+            // If not the "Tank" prefix in DeviceID then ignore message
+            string sTankID = tuMessage.TankId;
+            CommPkt.CPMessage cpMsg = new CPMessage();
+            StringBuilder sData = new StringBuilder();
+            sData.Append("[");
+
+            foreach (string tankdatavalue in tuMessage.Data.Keys)
+            {                
+                if (tankdatavalue.ToLower().Contains("percent"))
+                {
+                    sData.Append("PC,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);
+                }
+                /*if (tankdatavalue.ToLower().Contains("temperature"))
+                {
+                    sData.Append(",TP,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);
+                }*/
+                if (tankdatavalue.ToLower().Contains("time"))
+                {
+                    cpMsg.dtUTCTimeStamp = Convert.ToDateTime(tuMessage.Data[tankdatavalue]);
+                }
+                /*
+                if (tankdatavalue.ToLower().Contains("gross volume"))
+                {
+                    sData.Append(",GV,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);
+                }
+                if (tankdatavalue.ToLower().Contains("gross level"))
+                {
+                    sData.Append(",GL,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);
+                }
+               
+                if (tankdatavalue.ToLower().Contains("net volume"))
+                {
+                    sData.Append(" NV,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);
+                }
+                if (tankdatavalue.ToLower().Contains("aux"))
+                {
+                    sData.Append(",AL,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);                               
+                }
+                if (tankdatavalue.ToLower().Contains("alarm"))
+                {
+                    sData.Append(",AB,");
+                    sData.Append(tuMessage.Data[tankdatavalue]);                              
+                } */
+            }
+           
+            // Create message object for queueing          
+            cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
+            cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
+            cpMsg.sSourceNumber = sTankID;
+            cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
+            cpMsg.iSequence = 0;           
+            cpMsg.iDataLen = sData.Length;
+            cpMsg.iErrorCode = 0;
+            cpMsg.iNetworkErrCode = 0;
+            cpMsg.sData = sData.ToString();
+            cpMsg.iSMPPChannelID = 0;
+            return cpMsg;
+        }
+
         private void bkgWorkerTx_DoWork(object sender, DoWorkEventArgs e)
         {
             CPMessage cpMsg;
