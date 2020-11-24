@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 
 namespace TankUtilityTopicReader
 {
-    using Common.Logging; 
+    using Common.Logging;
+    using System.Threading;
 
     class Program
     {
@@ -15,27 +16,26 @@ namespace TankUtilityTopicReader
         {
             try
             {
+                var cancellationTokenReadings = new CancellationTokenSource();                                
                 
                 var readingSubscriptionName = ConfigurationManager.AppSettings["ReadingsSubscription"];
                 var configsSuscriptionName = ConfigurationManager.AppSettings["ConfigsSubscription"];
 
 
                 Console.WriteLine("======================================================");
-                Console.WriteLine("Press ENTER key to exit after receiving all the messages.");
+                Console.WriteLine("Press ENTER key to exit recieve message loop.");
                 Console.WriteLine("======================================================");
 
-                var tankReadingsReciever = new TankUtilityTopicSubReader(readingSubscriptionName);
+                var tankReadingsReciever = new TankUtilityTopicSubReader(readingSubscriptionName, cancellationTokenReadings.Token);
 
-                tankReadingsReciever.ReceiveMessages();
-
-                var deviceConfigsReceiver = new TankUtilityTopicSubReader(configsSuscriptionName);
-
-                deviceConfigsReceiver.ReceiveMessages();
+                var aTask = tankReadingsReciever.ReceiveMessagesLoopAsync();
 
                 Console.ReadKey();
 
-                await tankReadingsReciever.CloseMessagePumpAsync();
-                await deviceConfigsReceiver.CloseMessagePumpAsync();
+                cancellationTokenReadings.Cancel();
+
+                await Task.WhenAll(new Task[] { aTask });
+                          
             }
             catch (Exception anException)
             {

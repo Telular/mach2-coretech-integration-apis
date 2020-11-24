@@ -227,7 +227,7 @@ namespace SkyBitzApiTests
 
                 for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
-                    readingPercent += .01;
+                    readingPercent += 1.0;
 
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
@@ -238,6 +238,8 @@ namespace SkyBitzApiTests
                     Assert.IsTrue(postResponse != null);
 
                     Assert.IsTrue(postResponse.Success, $"POST Tank Reading Response Failed:  {postResponse.ErrorTitle} - {postResponse.ErrorMessage}");
+
+                    await Task.Delay(500);
                 }
 
             }

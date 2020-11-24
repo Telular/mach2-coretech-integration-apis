@@ -4,8 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Serilog;
 using Microsoft.AspNetCore.Authorization;
+using AspNetCoreRateLimit;
 
 
 namespace TankLinkNotifierApi
@@ -22,9 +22,15 @@ namespace TankLinkNotifierApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            
 
             services.AddSingleton<ServiceBusTopicSender>();
             services.AddSingleton<TankUtilityApi.TankUtilityApi>();
+            
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer( opt =>
@@ -42,6 +48,8 @@ namespace TankLinkNotifierApi
                 options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
             });
 
+            services.AddHttpContextAccessor();
+
             services.AddControllers().AddNewtonsoftJson();
 
             services.AddMemoryCache();
@@ -50,6 +58,8 @@ namespace TankLinkNotifierApi
             { 
                 options.Configuration = Configuration["CacheConfigString"];
             });
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -62,7 +72,9 @@ namespace TankLinkNotifierApi
             else                
             {
                 app.UseExceptionHandler("/error");
-            }           
+            }
+
+            app.UseIpRateLimiting();
 
             app.UseHttpsRedirection();
            

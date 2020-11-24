@@ -8,9 +8,8 @@ namespace TankUtilityTopicReader
     using Microsoft.Azure.ServiceBus;
     using Microsoft.Azure.ServiceBus.Core;
     using Newtonsoft.Json;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Runtime.Serialization;
+    using System.Linq;   
     using System.Text;
     using System.Threading;
 
@@ -19,27 +18,37 @@ namespace TankUtilityTopicReader
         private static readonly ILog _logger = LogManager.GetLogger("TankUtilityTopicReader");
 
         private readonly string _topicName;
-        private readonly string _subscriptionName;        
+        private readonly string _subscriptionName;
+        private readonly CancellationToken _cancellationToken;
+        
         private readonly string _applicationName = "Tank Utlity Topic Reader";
 
-        private SubscriptionClient _subscriptionClient;
+        // Prefetch should be larger than the max messages - more efficient.
+        private readonly int _prefetchCount = 20;
+        private readonly int _maxMessagesPerRead = 10;
+
+        private MessageReceiver _messageReceiver;
         
 
-        public TankUtilityTopicSubReader(string subscriptionName) 
+        public TankUtilityTopicSubReader(string subscriptionName, CancellationToken cancellationToken) 
         {
             _topicName = ConfigurationManager.AppSettings["TankUtilityTopic"];
             _subscriptionName = subscriptionName;
+            _cancellationToken = cancellationToken;
+            _cancellationToken.Register(async () => await CloseMessagePumpAsync());
 
             InitializeServiceBus();
         }
 
             
 
-        public TankUtilityTopicSubReader(string topicName, string subscriptionName)
+        public TankUtilityTopicSubReader(string topicName, string subscriptionName, CancellationToken cancellationToken)
         {
             _topicName = topicName;
             _subscriptionName = subscriptionName;
-            
+
+            _cancellationToken = cancellationToken;
+            _cancellationToken.Register(async () => await CloseMessagePumpAsync());
 
             InitializeServiceBus();
         }
@@ -50,25 +59,104 @@ namespace TankUtilityTopicReader
 
             RetryExponential retryPolicy = new RetryExponential(minimumBackoff: TimeSpan.FromSeconds(0), maximumBackoff: TimeSpan.FromSeconds(30), maximumRetryCount: 5);
 
-            _subscriptionClient = new SubscriptionClient(connectionString, _topicName, _subscriptionName, ReceiveMode.PeekLock, retryPolicy);
+            var entityPath = $"{_topicName}/Subscriptions/{_subscriptionName}";
+
+            _messageReceiver = new MessageReceiver(connectionString, entityPath, ReceiveMode.PeekLock, retryPolicy, _prefetchCount);
         }
 
-        public void ReceiveMessages()
+        public async Task ReceiveMessagesLoopAsync()
         {
-            // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+            _logger.Info($"{_applicationName} - Message pump is running.");
+
+            var payloadList = new List<Payload>();            
+
+            var lockObject = new Object();
+
+            while (!_cancellationToken.IsCancellationRequested)
             {
-                // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-                // Set it according to how many messages the application wants to process in parallel.
-                MaxConcurrentCalls = 1,
+                try
+                {
+                    var messageList = await _messageReceiver.ReceiveAsync(_maxMessagesPerRead, TimeSpan.FromSeconds(5));
 
-                // Indicates whether MessagePump should automatically complete the messages after returning from User Callback.
-                // False below indicates the Complete will be handled by the User Callback as in `ProcessMessagesAsync` below.
-                AutoComplete = false
-            };
+                    // if no messages then just wait five seconds.  in reality this shoule be more like 5 minutes for production purposes.
+                    if (messageList == null)
+                    {
 
-            // Register the function that processes messages.
-            _subscriptionClient.RegisterMessageHandler(ProcessMessagesAsync, messageHandlerOptions);
+                        await Task.Delay(5000);
+
+                        continue;
+                    }
+
+                    foreach (var message in messageList)
+                    {
+
+                        var aPayload = JsonConvert.DeserializeObject<Payload>(Encoding.UTF8.GetString(message.Body));
+
+                        aPayload.Data.Add("EventType", message?.UserProperties?["EventType"]);
+                        
+
+                        payloadList.Add(aPayload);
+
+                        await _messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+
+                    }
+
+
+
+                    // for this non-concurrent collection just lock it and clear it.
+                    lock (payloadList)
+                    {
+                        var sortedList = payloadList.OrderBy(o => o.Data["time"]).ToList();
+                        payloadList.Clear();
+
+                        PrintPayloads(sortedList);
+                    }                    
+                }
+                catch(ServiceBusException sbException)
+                {
+                    if (!sbException.IsTransient)
+                    {
+                        if (!_cancellationToken.IsCancellationRequested)
+                        {
+                            _logger.Error($"{_applicationName} - Service Bus Non-Transient Exception.", sbException);
+                            throw;
+                        }
+                        
+                    }                    
+                }
+                catch(Exception anException)
+                {
+                    _logger.Error($"{_applicationName} - Service Bus Transient Exception.", anException);
+                }
+                
+            }
+
+
+        }
+
+        public void PrintPayloads(List<Payload> payloadList)
+        {            
+
+            foreach (var payload in payloadList)
+            {                
+                PrintPayload(payload);
+            }
+
+        }
+
+        private void PrintPayload(Payload payload)
+        {
+            var stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine($"Tank Id:  {payload?.TankId}  Event Timestamp:  {((DateTime?)payload?.Data?["time"])?.ToString("o")}  Received On:   {payload?.ReceivedOn?.ToString("o")}");
+
+            foreach (var key in payload?.Data?.Keys)
+            {
+                var aKey = $"\"{key}\"";
+                stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
+            }
+
+            _logger.Info($"{stringBuilder}");
         }
 
         public async Task CloseMessagePumpAsync()
@@ -76,57 +164,18 @@ namespace TankUtilityTopicReader
             try
             {
                 // close our communication with the MT queues and topics
-                if (_subscriptionClient != null && !_subscriptionClient.IsClosedOrClosing)
+                if (_messageReceiver != null && !_messageReceiver.IsClosedOrClosing)
                 {
-                    await _subscriptionClient.CloseAsync();
+                    await _messageReceiver.CloseAsync();
                 }
 
                 _logger.Info($"{_applicationName} - Message pump has been stopped.");
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.Error($"{_applicationName} {ex.Message}", ex);
+                // Ignore exceptions we're shutting down.
             }
-        }
-
-        private async Task ProcessMessagesAsync(Message message, CancellationToken token)
-        {
-            var stringBuilder = new StringBuilder();
-
-            if (!token.IsCancellationRequested)
-            {
-                if (message != null)
-                {                    
-                    var messageStr = Encoding.UTF8.GetString(message.Body);
-
-                    var messageBody = JsonConvert.DeserializeObject<Payload>(messageStr);
-
-                    stringBuilder.AppendLine($"Event Type: {message?.UserProperties?["EventType"]}  Tank Id:  {messageBody.TankId} Received On:  {messageBody.ReceivedOn}");
-
-                    foreach (var key in messageBody?.Data?.Keys)
-                    {
-                        var aKey = $"\"{key}\"";
-                        stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {messageBody?.Data?[key]}");
-                    }
-
-                    _logger.Info($"{stringBuilder}");                    
-
-                    await _subscriptionClient.CompleteAsync(message.SystemProperties.LockToken);
-                }
-            }                       
-        }
-
-        private async Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
-        {
-            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
-            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
-            Console.WriteLine("Exception context for troubleshooting:");
-            Console.WriteLine($"- Endpoint: {context.Endpoint}");
-            Console.WriteLine($"- Entity Path: {context.EntityPath}");
-            Console.WriteLine($"- Executing Action: {context.Action}");
-
-            await Task.Delay(1000);
-        }                
+        }            
 
     }
 }

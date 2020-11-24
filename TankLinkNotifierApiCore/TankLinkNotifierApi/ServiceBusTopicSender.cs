@@ -23,7 +23,7 @@ namespace TankLinkNotifierApi
         {
             
             _logger = logger;
-            ServiceBusConnectionStringBuilder connectionStringBuilder = new ServiceBusConnectionStringBuilder(configuration["ServiceBusConnectionString"]);
+            ServiceBusConnectionStringBuilder connectionStringBuilder = new ServiceBusConnectionStringBuilder(configuration["ServiceBusConnectionStringDev"]);
             string tankEntityPath = connectionStringBuilder.EntityPath;
             connectionStringBuilder.EntityPath = "";
 
