@@ -11,9 +11,6 @@
     <Setting Name="RecoveryFilePath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\Telchifil001\Share\DevLogFiles\CommPktMgrSP</Value>
     </Setting>
-    <Setting Name="RemotingTxPort" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">50980</Value>
-    </Setting>
     <Setting Name="RemotingRxOnlineTimeout" Type="System.String" Scope="Application">
       <Value Profile="(Default)">100</Value>
     </Setting>
@@ -41,8 +38,14 @@
     <Setting Name="RemotingTxService" Type="System.String" Scope="Application">
       <Value Profile="(Default)">TankUtilityInterface</Value>
     </Setting>
+    <Setting Name="RemotingTxPort" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">51000</Value>
+    </Setting>
+    <Setting Name="MessageExpirationMinutes" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
     <Setting Name="TopicConnection" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Endpoint=sb://mach2-coretech-servicebus-production.servicebus.windows.net/;SharedAccessKeyName=RootSendListenOnlyAccessKey;SharedAccessKey=qfn22/Xn8j/ZO+koeF/n79Hg/AGjH5BMJl8CY9HpeXI=</Value>
+      <Value Profile="(Default)">Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=1JppMfADw5ZqCW09UYrS3fuYrzvSKtnlVq5oDdaHFUE=</Value>
     </Setting>
   </Settings>
 </SettingsFile>

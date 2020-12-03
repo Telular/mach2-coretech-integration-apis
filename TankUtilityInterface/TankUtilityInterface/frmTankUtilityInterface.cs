@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
+//using System.Data;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Collections;
+using System.Configuration;
 using CommPkt;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Net.Http;
-using System.Net.Http.Headers;
+//using System.Net.Http.Headers;
 using System.Net;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using Microsoft.ServiceBus.Messaging;
-using System.IO;
-
-//using Microsoft.ServiceBus.Messaging;
+//using System.IO;
 
 namespace TankUtilityInterface
 {
@@ -92,7 +91,9 @@ namespace TankUtilityInterface
 
         public Queue qReceive;
         public System.Threading.AutoResetEvent eventNewRxWork;
-      
+
+        public TankUtilityTopicSubReader tankReadingsReciever;
+
         //*********************************************************************************************
         // End of Public Vars.
         //*********************************************************************************************
@@ -177,117 +178,11 @@ namespace TankUtilityInterface
             {
                 // Add packet to CommPktMgr recovery file since we can't remote it
                 CommPkt.Log.RecoverMessageToFile(Properties.Settings.Default.LogFilePath, cpMsg);
-                AddlistViewStatusItem("DeliverMessage Error! " + ex.Message + ", Remoting Failed", Color.Red);
+                this.tankReadingsReciever.AddlistViewStatusItem("DeliverMessage Error! " + ex.Message + ", Remoting Failed", Color.Red);
             }
             return;
-        }
-
-        #region Header Comments
-        //*********************************************************************************************
-        // AddListViewMsgItem
-        //
-        // PURPOSE:   This is a thread safe method to add a line to the message list view. 
-        // 
-        // USES:      
-        // 
-        //*********************************************************************************************
-        #endregion
-
-        private delegate void AddListViewMsgItemDelegate(string sDirection, DateTime dtTimeStamp, string sDevice, string sData, Color cText);
-
-        private void AddListViewMsgItem(string sDirection, DateTime dtTimeStamp, string sDevice, string sData, Color cText)
-        {
-            // If current thread is not the same as controls thread then invoke a delegate call
-            // Else just do it
-            if (listViewMsg.InvokeRequired == true)
-            {
-                listViewMsg.Invoke(new AddListViewMsgItemDelegate(AddListViewMsgItem), new object[] { sDirection, dtTimeStamp, sDevice, sData, cText });
-            }
-            else
-            {
-                // If last item in list is visible then set autoscroll to true
-                bool bAutoScroll = (listViewMsg.Items.Count > 0
-                    && (listViewMsg.Height - listViewMsg.TopItem.Position.Y)
-                        > listViewMsg.Items[listViewMsg.Items.Count - 1].Position.Y);
-
-                ListViewItem item = new ListViewItem(DateTime.Now.ToString());
-                item.ForeColor = cText;
-                item.SubItems.Add(sDirection);
-                item.SubItems.Add(dtTimeStamp.ToString());
-                item.SubItems.Add(sDevice);
-                item.SubItems.Add(sData);
-                if (listViewMsg.Items.Count > 2000)
-                {
-                    listViewMsg.Items.RemoveAt(0);
-                }
-                listViewMsg.Items.Insert(listViewMsg.Items.Count, item);
-
-                // Make sure new item is visible if previous last item was visible
-                if (bAutoScroll)
-                {
-                    listViewMsg.Items[listViewMsg.Items.Count - 1].EnsureVisible();
-                }
-
-                // If Error message then copy it to error log file
-                if (Color.Red == cText)
-                {
-                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface :" + sDirection + ":" + sDevice + ": 0 :" + sData);
-                }
-            }
-        }
-
-
-        #region Header Comments
-        //*********************************************************************************************
-        // AddlistViewStatusItem
-        //
-        // PURPOSE:   This is a thread safe method to add a line to the status list view. 
-        // 
-        // USES:      
-        // 
-        //*********************************************************************************************
-        #endregion
-
-        private delegate void AddlistViewStatusItemDelegate(string sStatus, Color cText);
-
-        private void AddlistViewStatusItem(string sStatus, Color cText)
-        {
-            // If current thread is not the same as controls thread then invoke a delegate call
-            // Else just do it
-            if (listViewStatus.InvokeRequired == true)
-            {
-                listViewStatus.Invoke(new AddlistViewStatusItemDelegate(AddlistViewStatusItem), new object[] { sStatus, cText });
-            }
-            else
-            {
-                // If last item in list is visible then set autoscroll to true
-                bool bAutoScroll = (listViewStatus.Items.Count > 0
-                    && (listViewStatus.Height - listViewStatus.TopItem.Position.Y)
-                    > listViewStatus.Items[listViewStatus.Items.Count - 1].Position.Y);
-
-                ListViewItem item = new ListViewItem(DateTime.Now.ToString());
-                item.ForeColor = cText;
-                item.SubItems.Add(sStatus);
-                if (listViewStatus.Items.Count > 2000)
-                {
-                    listViewStatus.Items.RemoveAt(0);
-                }
-                listViewStatus.Items.Insert(listViewStatus.Items.Count, item);
-
-                // Make sure new item is visible if previous last item was visible
-                if (bAutoScroll)
-                {
-                    listViewStatus.Items[listViewStatus.Items.Count - 1].EnsureVisible();
-                }
-
-                // If Error message then copy it to error log file
-                if (Color.Red == cText)
-                {
-                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface :" + sStatus);
-                }
-
-            }
-        }
+        }      
+    
 
         #region Header Comments
         //*********************************************************************************************
@@ -465,10 +360,9 @@ namespace TankUtilityInterface
         // 
         //*********************************************************************************************
         #endregion
-        private void bkgWorkerRx_DoWork(object sender, DoWorkEventArgs e)
+        private async void  bkgWorkerRx_DoWork(object sender, DoWorkEventArgs e)
         {
             int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
-            mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
 
             // Check for Rx Channel work to do forever
             for (; ; )
@@ -479,173 +373,23 @@ namespace TankUtilityInterface
                     eventNewRxWork.WaitOne(5000, false);
                     eventNewRxWork.Set();
 
-                    // Initialize Azure Topic Subscription
-                    OnMessageOptions options = new OnMessageOptions();
-                    options.AutoComplete = true;
-                    options.AutoRenewTimeout = TimeSpan.FromMinutes(1);                    
-#if DEBUG
-                    // For debugging only one call at a time
-                    options.MaxConcurrentCalls = 1;
-#else
-                    options.MaxConcurrentCalls = 5;
-#endif
-                    // Init the connection to the Service Bus Topic
-                   if (mobileOriginateSubClient.IsClosed)
-                        mobileOriginateSubClient = SubscriptionClient.CreateFromConnectionString(Properties.Settings.Default.TopicConnection, Properties.Settings.Default.TopicName, Properties.Settings.Default.SubscriptionName);
-                    // Create On Message Handler
-                    mobileOriginateSubClient.OnMessage(message =>
-                    {                      
-                        string sTankDeviceIdPrefix = Properties.Settings.Default.MSGDeviceIDPrefix;                     
-                        var sData = new StringBuilder();                                                                      
-                        string messageJson = string.Empty;
-                        CPMessage cpMsg = null;
-                        Payload tuMessage = null;
-                       
-                        // If Client is closed then return
-                        if (mobileOriginateSubClient.IsClosed)
-                        {
-                            AddlistViewStatusItem("OnMessage, SubscriptionClient Closed!", Color.Red);
-                            return;
-                        }                                             
-                        try
-                        {
-                            Stream stream = message.GetBody<Stream>();
-                            StreamReader reader = new StreamReader(stream);
-                            messageJson = reader.ReadToEnd();
-                            AddDebugLogItem(messageJson);
-                            tuMessage = JsonConvert.DeserializeObject<Payload>(messageJson);
-                            if (tuMessage == null)
-                            {
-                                AddlistViewStatusItem("OnMessage, DeserializeObject Error! Null object returned", Color.Red);
-                                return;
-                            }  
-                            cpMsg = ProcessTUMessage(tuMessage);
-                        }
-                        catch (Exception ex1)
-                        {
-                            AddlistViewStatusItem("OnMessage, DeserializeObject Exception!: " + ex1.Message, Color.Red);
-                            return;
-                        }
+                    var readingSubscriptionName = Properties.Settings.Default.SubscriptionName;
 
-                        // If UTCCreatedTimestamp is null then ignore message
-                        if (null == cpMsg.dtUTCTimeStamp)
-                        {
-                            AddlistViewStatusItem("OnMessage, Null UTCCreatedTimestamp, Device: " + tuMessage.TankId, Color.Red);
-                            return;
-                        }
-                        // Queue message and set new work event
-                        qReceive.Enqueue(cpMsg);
-                        eventNewRxWork.Set();
-                        
-                        // Display message
-                        AddListViewMsgItem("Rx", tuMessage.ReceivedOn, tuMessage.TankId, messageJson, Color.Black);
-                    }, options);
-                    
-                    // Check for SMS messages
-                    try
-                    {
-                        CPMessage cpMsg;
-                        for (; ; )
-                        {
-                            // Wait for notice of work to do or polling timeout occured
-                            eventNewRxWork.WaitOne(iGetMessagePollTime, false);
+                    tankReadingsReciever = new TankUtilityTopicSubReader(readingSubscriptionName, this.listViewMsg, this.listViewStatus);
 
-                            // While this threads queue has items, process them
-                            while (qReceive.Count > 0)
-                            {
-                                try
-                                {
-                                    cpMsg = (CPMessage)qReceive.Dequeue();
-                                }
-                                catch
-                                {
-                                    // If queue is empty then continue
-                                    continue;
-                                }
+                    await tankReadingsReciever.ReceiveMessagesLoopAsync();
 
-                                DeliverMessage(cpMsg);
-                            }
-                        }
-                    }
-                    catch (Exception ex1)
-                    {
-                        AddlistViewStatusItem("bkgWorkerRx_DoWork, GetSmsMessages Exception!: " + ex1.Message, Color.Red);
-                    }
+                    await tankReadingsReciever.CloseMessagePumpAsync();
+
                 }
                 catch (Exception ex1)
                 {
-                    AddlistViewStatusItem("bkgWorkerRx_DoWork, Unhandled Exception!: " + ex1.Message, Color.Red);
-                } 
+                    this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerRx_DoWork, Unhandled Exception!: " + ex1.Message, Color.Red);
+                }
             }
         }
              
-        private CPMessage ProcessTUMessage(Payload tuMessage)
-        {
-            // If not the "Tank" prefix in DeviceID then ignore message
-            string sTankID = tuMessage.TankId;
-            CommPkt.CPMessage cpMsg = new CPMessage();
-            StringBuilder sData = new StringBuilder();
-            sData.Append("[");
-
-            foreach (string tankdatavalue in tuMessage.Data.Keys)
-            {                
-                if (tankdatavalue.ToLower().Contains("percent"))
-                {
-                    sData.Append("PC,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);
-                }
-                /*if (tankdatavalue.ToLower().Contains("temperature"))
-                {
-                    sData.Append(",TP,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);
-                }*/
-                if (tankdatavalue.ToLower().Contains("time"))
-                {
-                    cpMsg.dtUTCTimeStamp = Convert.ToDateTime(tuMessage.Data[tankdatavalue]);
-                }
-                /*
-                if (tankdatavalue.ToLower().Contains("gross volume"))
-                {
-                    sData.Append(",GV,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);
-                }
-                if (tankdatavalue.ToLower().Contains("gross level"))
-                {
-                    sData.Append(",GL,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);
-                }
-               
-                if (tankdatavalue.ToLower().Contains("net volume"))
-                {
-                    sData.Append(" NV,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);
-                }
-                if (tankdatavalue.ToLower().Contains("aux"))
-                {
-                    sData.Append(",AL,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);                               
-                }
-                if (tankdatavalue.ToLower().Contains("alarm"))
-                {
-                    sData.Append(",AB,");
-                    sData.Append(tuMessage.Data[tankdatavalue]);                              
-                } */
-            }
-           
-            // Create message object for queueing          
-            cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
-            cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
-            cpMsg.sSourceNumber = sTankID;
-            cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
-            cpMsg.iSequence = 0;           
-            cpMsg.iDataLen = sData.Length;
-            cpMsg.iErrorCode = 0;
-            cpMsg.iNetworkErrCode = 0;
-            cpMsg.sData = sData.ToString();
-            cpMsg.iSMPPChannelID = 0;
-            return cpMsg;
-        }
-
+     
         private void bkgWorkerTx_DoWork(object sender, DoWorkEventArgs e)
         {
             CPMessage cpMsg;
@@ -693,7 +437,7 @@ namespace TankUtilityInterface
                             // Continue and ignore message if any parsing exceptions
                             catch (Exception ex1)
                             {
-                                AddlistViewStatusItem("bkgWorkerTx_DoWork, Parse Exception!: " + ex1.Message, Color.Red);
+                                this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, Parse Exception!: " + ex1.Message, Color.Red);
                                 continue;
                             }
                             // Turn off Expect:100-Continue header so it sends body with first request
@@ -709,34 +453,34 @@ namespace TankUtilityInterface
                                     // If any results other then "true" display it in an error
                                     if (sResult != "true")
                                     {
-                                        AddlistViewStatusItem("bkgWorkerTx_DoWork, UploadString non-true Post Results: " + sResult, Color.Red);
+                                        this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, UploadString non-true Post Results: " + sResult, Color.Red);
                                     }
                                 }
-                                AddListViewMsgItem("Tx", DateTime.UtcNow, cpMsg.sSourceNumber, cpMsg.sData, Color.Black);
+                                this.tankReadingsReciever.AddListViewMsgItem("Tx", DateTime.UtcNow, cpMsg.sSourceNumber, cpMsg.sData, Color.Black);
                             }
                             // Display any UploadString exceptions
                             catch (Exception ex1)
                             {
                                 if (null != sResult)
                                 {
-                                    AddlistViewStatusItem("bkgWorkerTx_DoWork, UploadString Exception!: " + ex1.Message + " Post Results:" + sResult, Color.Red);
+                                    this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, UploadString Exception!: " + ex1.Message + " Post Results:" + sResult, Color.Red);
                                 }
                                 else
                                 {
-                                    AddlistViewStatusItem("bkgWorkerTx_DoWork, WebClient Exception!: " + ex1.Message, Color.Red);
+                                    this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, WebClient Exception!: " + ex1.Message, Color.Red);
                                 }
-                                AddListViewMsgItem("Tx Failed!", DateTime.UtcNow, cpMsg.sSourceNumber, cpMsg.sData, Color.Red);
+                                this.tankReadingsReciever.AddListViewMsgItem("Tx Failed!", DateTime.UtcNow, cpMsg.sSourceNumber, cpMsg.sData, Color.Red);
                             }
                         }
                         catch (Exception ex2)
                         {
-                            AddlistViewStatusItem("bkgWorkerTx_DoWork, Post Message Exception!: " + ex2.Message, Color.Red);
+                            this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, Post Message Exception!: " + ex2.Message, Color.Red);
                         }
                     }
                 }
                 catch (Exception ex3)
                 {
-                    AddlistViewStatusItem("bkgWorkerTx_DoWork, Unhandled Exception!: " + ex3.Message, Color.Red);
+                    this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerTx_DoWork, Unhandled Exception!: " + ex3.Message, Color.Red);
                 }
             }
         }
