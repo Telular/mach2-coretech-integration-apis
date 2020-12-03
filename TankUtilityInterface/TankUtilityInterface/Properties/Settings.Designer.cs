@@ -12,7 +12,7 @@ namespace TankUtilityInterface.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -47,15 +47,6 @@ namespace TankUtilityInterface.Properties {
         public string RecoveryFilePath {
             get {
                 return ((string)(this["RecoveryFilePath"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50980")]
-        public string RemotingTxPort {
-            get {
-                return ((string)(this["RemotingTxPort"]));
             }
         }
         
@@ -143,9 +134,27 @@ namespace TankUtilityInterface.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-production.servicebus.windows.net/;Shared" +
-            "AccessKeyName=RootSendListenOnlyAccessKey;SharedAccessKey=qfn22/Xn8j/ZO+koeF/n79" +
-            "Hg/AGjH5BMJl8CY9HpeXI=")]
+        [global::System.Configuration.DefaultSettingValueAttribute("51000")]
+        public string RemotingTxPort {
+            get {
+                return ((string)(this["RemotingTxPort"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public string MessageExpirationMinutes {
+            get {
+                return ((string)(this["MessageExpirationMinutes"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Endpoint=sb://mach2-coretech-servicebus-development.servicebus.windows.net/;Share" +
+            "dAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=1JppMfADw5ZqCW09UYrS3fu" +
+            "YrzvSKtnlVq5oDdaHFUE=")]
         public string TopicConnection {
             get {
                 return ((string)(this["TopicConnection"]));
