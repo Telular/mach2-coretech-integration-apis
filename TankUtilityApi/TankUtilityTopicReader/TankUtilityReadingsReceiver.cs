@@ -96,6 +96,7 @@ namespace TankUtilityTopicReader
 
                         payloadList.Add(aPayload);
 
+                        
                         await _messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
 
                     }
@@ -153,6 +154,10 @@ namespace TankUtilityTopicReader
             foreach (var key in payload?.Data?.Keys)
             {
                 var aKey = $"\"{key}\"";
+
+                // print telemetry separately.
+                if (aKey == "telemetry") continue;
+
                 stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
             }
 
@@ -168,7 +173,7 @@ namespace TankUtilityTopicReader
                 foreach (var key in telemetry?.Keys)
                 {
                     var aKey = $"\"{key}\"";
-                    stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
+                    stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {telemetry?[key]}");
                 }
             }
             catch(Exception anException)
