@@ -165,7 +165,7 @@ namespace TankUtilityTopicReader
                     stringBuilder.AppendLine("Telemetry:");
                 }
 
-                foreach (var key in telemetry)
+                foreach (var key in telemetry?.Keys)
                 {
                     var aKey = $"\"{key}\"";
                     stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
