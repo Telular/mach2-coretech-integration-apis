@@ -27,6 +27,17 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
+                var telemetry = new Dictionary<string, object>
+                {
+                  {"rsrp", -122.5},
+                  {"rsrq", -12.7},
+                  {"plmn", 311480},
+                  {"chn", 2100},
+                  {"band", 4},
+                  {"cell_id", "2764320"}
+                };
+
+                newReading["telemetry"] = telemetry;
 
                 var postResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);
 
@@ -55,6 +66,17 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
+                var telemetry = new Dictionary<string, object>
+                {
+                  {"rsrp", -122.5},
+                  {"rsrq", -12.7},
+                  {"plmn", 311480},
+                  {"chn", 2100},
+                  {"band", 4},
+                  {"cell_id", "2764320"}
+                };
+
+                newReading["telemetry"] = telemetry;
 
                 var postResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceLongId, newReading);
 
@@ -225,6 +247,18 @@ namespace SkyBitzApiTests
                     { "telular_test_counter", $"{counter}" }
                 };
 
+                var telemetry = new Dictionary<string, object>
+                {
+                  {"rsrp", -122.5},
+                  {"rsrq", -12.7},
+                  {"plmn", 311480},
+                  {"chn", 2100},
+                  {"band", 4},
+                  {"cell_id", "2764320"}
+                };
+
+                var emptyTelemetry = new Dictionary<string, object>();
+
                 for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += 1.0;
@@ -232,6 +266,13 @@ namespace SkyBitzApiTests
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
                     newReading["telular_test_counter"] = $"{counter++}";
+
+                    newReading["telemetry"] = telemetry;
+
+                    if (i % 7 == 0)
+                    {
+                        newReading["telemetry"] = emptyTelemetry;
+                    }
 
                     var postResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);
 
@@ -317,6 +358,18 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
+                var telemetry = new Dictionary<string, object>
+                {
+                  {"rsrp", -122.5},
+                  {"rsrq", -12.7},
+                  {"plmn", 311480},
+                  {"chn", 2100},
+                  {"band", 4},
+                  {"cell_id", "2764320"}
+                };
+
+                var emptyTelemetry = new Dictionary<string, object>();                
+
                 for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += .01;
@@ -324,7 +377,12 @@ namespace SkyBitzApiTests
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
 
-                    
+                    newReading["telemetry"] = telemetry;
+
+                    if (i % 7 == 0)
+                    {
+                        newReading["telemetry"] = emptyTelemetry;
+                    }
 
                     var readingPostResponse = await skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);                                          
 
@@ -374,12 +432,31 @@ namespace SkyBitzApiTests
                     { "telular_test", true }
                 };
 
+                var telemetry = new Dictionary<string, object>
+                {
+                  {"rsrp", -122.5},
+                  {"rsrq", -12.7},
+                  {"plmn", 311480},
+                  {"chn", 2100},
+                  {"band", 4},
+                  {"cell_id", "2764320"}
+                };
+
+                var emptyTelemetry = new Dictionary<string, object>();
+
                 for (int i = 0; i < SkyBitzApiTestParams.LoopTestIterations; i++)
                 {
                     readingPercent += .01;
 
                     newReading["time"] = $"{DateTime.UtcNow:o}";
                     newReading["percent"] = readingPercent;
+
+                    newReading["telemetry"] = telemetry;
+
+                    if (i % 7 == 0)
+                    {
+                        newReading["telemetry"] = emptyTelemetry;
+                    }
 
                     var readingTask1 = skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceShortId, newReading);
                     var readingTask2 = skyBitzApi.PostTankReadingAsync(SkyBitzApiTestParams.GoodDeviceLongId, newReading);

@@ -92,8 +92,7 @@ namespace TankUtilityTopicReader
 
                         var aPayload = JsonConvert.DeserializeObject<Payload>(Encoding.UTF8.GetString(message.Body));
 
-                        aPayload.Data.Add("EventType", message?.UserProperties?["EventType"]);
-                        
+                        aPayload.Data.Add("EventType", message?.UserProperties?["EventType"]);                                              
 
                         payloadList.Add(aPayload);
 
@@ -147,6 +146,7 @@ namespace TankUtilityTopicReader
         private void PrintPayload(Payload payload)
         {
             var stringBuilder = new StringBuilder();
+            Dictionary<string, object> telemetry;
 
             stringBuilder.AppendLine($"Tank Id:  {payload?.TankId}  Event Timestamp:  {((DateTime?)payload?.Data?["time"])?.ToString("o")}  Received On:   {payload?.ReceivedOn?.ToString("o")}");
 
@@ -156,6 +156,26 @@ namespace TankUtilityTopicReader
                 stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
             }
 
+            try
+            {
+                telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(payload.Data["telemetry"].ToString());
+
+                if (telemetry.Any())
+                {
+                    stringBuilder.AppendLine("Telemetry:");
+                }
+
+                foreach (var key in telemetry)
+                {
+                    var aKey = $"\"{key}\"";
+                    stringBuilder.AppendLine($"Key:  {aKey,-30}  Value:  {payload?.Data?[key]}");
+                }
+            }
+            catch(Exception anException)
+            {
+                _logger.Error($"Unable to retrieve telemetry data.  {anException.Message} {anException?.InnerException?.Message}");
+            }
+            
             _logger.Info($"{stringBuilder}");
         }
 
