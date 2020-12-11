@@ -26,7 +26,7 @@ namespace TankUtilityInterface
         private readonly int _prefetchCount = 20;
         private readonly int _maxMessagesPerRead = 40;
 
-        private double MessageExpirationMinutes = 300; // mins
+//        private double MessageExpirationMinutes = 300; // mins
         //300 minutes
         private MessageReceiver _messageReceiver;
 
@@ -77,10 +77,6 @@ namespace TankUtilityInterface
 
         public async Task ReceiveMessagesLoopAsync()
         {          
-            MessageExpirationMinutes = Convert.ToDouble(Properties.Settings.Default.MessageExpirationMinutes);
-            if (MessageExpirationMinutes == 0)
-                MessageExpirationMinutes = 300;
-            
             while (true)
             {
                 var messageList = await _messageReceiver.ReceiveAsync(_maxMessagesPerRead, TimeSpan.FromSeconds(5));
@@ -91,17 +87,20 @@ namespace TankUtilityInterface
                     try
                     {                   
                         var aPayload = JsonConvert.DeserializeObject<Payload>(Encoding.UTF8.GetString(message.Body));
-                        DateTimeOffset dataTime;
-                        DateTimeOffset.TryParse(aPayload.Data["time"].ToString(), out dataTime);
+                        // Always log the raw message
                         Log.ErrorToFile(Properties.Settings.Default.LogFilePath + "\\TUI_DebugLog", Encoding.UTF8.GetString(message.Body));
+                        // Need the "reading time" to add the message to the display
+                        DateTime dataTime;
+                        DateTime.TryParse(aPayload.Data["time"].ToString(), out dataTime);
                         // Display message
-                        AddListViewMsgItem("Rx", dataTime.DateTime, aPayload.TankId, Encoding.UTF8.GetString(message.Body), Color.Black);
+                        AddListViewMsgItem("Rx", dataTime, aPayload.TankId, Encoding.UTF8.GetString(message.Body), Color.Black);
                         
                         await PrintPayloads(aPayload);
                         await _messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
                     }
                     catch(Exception ex)
                     {
+                        //MKR What is message.MessageId (SBuxEx available)?  Should this have message.Body?
                         Log.ErrorToFile(Properties.Settings.Default.LogFilePath, string.Format("TankUtilityInterface : MessageId: {0}, {1}" , message.MessageId, ex.ToString()));
                         await _messageReceiver.DeadLetterAsync(message.SystemProperties.LockToken);                       
                     }
@@ -113,60 +112,68 @@ namespace TankUtilityInterface
 
         public async Task PrintPayloads(Payload payload)
         {          
-            int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
+//            int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
 
             lock (Console.Out)
             {
                 Dictionary<string, object> tankdata = payload.Data;
-                if (!tankdata.ContainsKey("telemetry"))
-                {
-                    return;
-                }
-                // If not the "Tank" prefix in DeviceID then ignore message
-                string sTankID = payload.TankId;
-                DateTime tankdataTime;                   
-                CommPkt.CPMessage cpMsg = new CPMessage();
-                StringBuilder sData = new StringBuilder();
-                sData.Append("[");
 
-                var telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(tankdata["telemetry"].ToString());                       
-                sData.Append("telemetry,");
-                sData.Append(telemetry);
-                
-                if (tankdata.ContainsKey("percent"))
+                if (tankdata.ContainsKey("telemetry"))
                 {
-                    sData.Append("PC,");
-                    sData.Append(tankdata["percent"]);
-                }                   
-                if (tankdata.ContainsKey("time"))
-                {
-                    DateTime.TryParse(tankdata["time"].ToString(), out tankdataTime);
-                    cpMsg.dtUTCTimeStamp = tankdataTime;
+                    Dictionary<string, object> telemetry;
+                    telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(tankdata["telemetry"].ToString());
+                    if (("" != payload.TankId)
+                        && (tankdata.ContainsKey("time"))
+                        && (tankdata.ContainsKey("percent"))
+                        && (telemetry.ContainsKey("rsrp"))
+                        && (telemetry.ContainsKey("rsrq"))
+                        )
+                    {
+                        // This message has the required elements to be passed to CPM
+
+                        DateTime tankdataTime;
+                        if (DateTime.TryParse(tankdata["time"].ToString(), out tankdataTime)
+//                            && ("0" != (string)telemetry["rsrp"])
+//                            && ("0" != (string)telemetry["rsrq"])
+                            )
+                        {
+                            //This message has the required values to be passed on to CPM
+
+                            CommPkt.CPMessage cpMsg = new CPMessage();
+                            StringBuilder sData = new StringBuilder();
+
+                            sData.Append("[");
+                            sData.Append("PC,");
+                            sData.Append(tankdata["percent"]);
+
+                            // Create message object for queueing          
+                            cpMsg.dtUTCTimeStamp = tankdataTime;
+                            cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
+                            cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
+                            cpMsg.sSourceNumber = payload.TankId;
+                            cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
+                            cpMsg.iSequence = 0;
+                            cpMsg.iDataLen = sData.Length;
+                            cpMsg.iErrorCode = 0;
+                            cpMsg.iNetworkErrCode = 0;
+                            cpMsg.sData = sData.ToString();
+                            cpMsg.iSMPPChannelID = 0;
+
+                            try
+                            {
+                                DeliverMessage(cpMsg);
+                            }
+                            catch (Exception ex)
+                            {
+                                AddlistViewStatusItem("PrintPayloads, DeliverMessage Exception!: " + ex.Message, Color.Red);
+                            }
+                        }
+
+                    }
                 }
-                   
-                // Create message object for queueing          
-                cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
-                cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
-                cpMsg.sSourceNumber = sTankID;
-                cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
-                cpMsg.iSequence = 0;
-                cpMsg.iDataLen = sData.Length;
-                cpMsg.iErrorCode = 0;
-                cpMsg.iNetworkErrCode = 0;
-                cpMsg.sData = sData.ToString();
-                cpMsg.iSMPPChannelID = 0;
-                                    
-                try
-                {
-                    DeliverMessage(cpMsg);
-                }
-                catch(Exception ex)
-                {
-                    AddlistViewStatusItem("PrintPayloads, GetSmsMessages Exception!: " + ex.Message, Color.Red);
-                }                 
             }
 
-            await Task.Delay(500);
+//            await Task.Delay(500);
         }
 
         #region Header Comments

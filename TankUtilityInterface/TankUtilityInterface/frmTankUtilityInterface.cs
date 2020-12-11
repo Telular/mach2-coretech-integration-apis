@@ -350,7 +350,7 @@ namespace TankUtilityInterface
         #region Header Comments
         //*********************************************************************************************
         // bkgWorkerRx_DoWork
-        //
+        
         // PURPOSE: The bkgWorkerRx_DoWork logs in to NPhaseOne and polls for MO messages from NPhaseOne.
         // 
         // USES:      qReceive:
@@ -388,8 +388,7 @@ namespace TankUtilityInterface
                 }
             }
         }
-             
-     
+         
         private void bkgWorkerTx_DoWork(object sender, DoWorkEventArgs e)
         {
             CPMessage cpMsg;
