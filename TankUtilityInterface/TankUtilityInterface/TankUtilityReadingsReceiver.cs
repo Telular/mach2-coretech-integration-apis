@@ -25,9 +25,6 @@ namespace TankUtilityInterface
         // Prefetch should be larger than the max messages - more efficient.
         private readonly int _prefetchCount = 20;
         private readonly int _maxMessagesPerRead = 40;
-
-//        private double MessageExpirationMinutes = 300; // mins
-        //300 minutes
         private MessageReceiver _messageReceiver;
 
         public Queue qReceive;
@@ -89,13 +86,12 @@ namespace TankUtilityInterface
                         var aPayload = JsonConvert.DeserializeObject<Payload>(Encoding.UTF8.GetString(message.Body));
                         // Always log the raw message
                         Log.ErrorToFile(Properties.Settings.Default.LogFilePath + "\\TUI_DebugLog", Encoding.UTF8.GetString(message.Body));
-                        // Need the "reading time" to add the message to the display
-                        DateTime dataTime;
-                        DateTime.TryParse(aPayload.Data["time"].ToString(), out dataTime);
+                        // Need the "reading time" to add the message to the display                       
+                        DateTime.TryParse(aPayload.Data["time"].ToString(), out DateTime dataTime);
                         // Display message
                         AddListViewMsgItem("Rx", dataTime, aPayload.TankId, Encoding.UTF8.GetString(message.Body), Color.Black);
                         
-                        await PrintPayloads(aPayload);
+                        PrintPayloads(aPayload);
                         await _messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
                     }
                     catch(Exception ex)
@@ -110,10 +106,8 @@ namespace TankUtilityInterface
         }
 
 
-        public async Task PrintPayloads(Payload payload)
+        public void PrintPayloads(Payload payload)
         {          
-//            int iGetMessagePollTime = Convert.ToInt32(Properties.Settings.Default.GetMessagePollTime);
-
             lock (Console.Out)
             {
                 Dictionary<string, object> tankdata = payload.Data;
@@ -122,7 +116,10 @@ namespace TankUtilityInterface
                 {
                     Dictionary<string, object> telemetry;
                     telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(tankdata["telemetry"].ToString());
-                    if (("" != payload.TankId)
+
+                    if (telemetry?.Count == 0) return;
+
+                    if ((String.IsNullOrWhiteSpace(payload.TankId))
                         && (tankdata.ContainsKey("time"))
                         && (tankdata.ContainsKey("percent"))
                         && (telemetry.ContainsKey("rsrp"))
@@ -130,15 +127,9 @@ namespace TankUtilityInterface
                         )
                     {
                         // This message has the required elements to be passed to CPM
-
-                        DateTime tankdataTime;
-                        if (DateTime.TryParse(tankdata["time"].ToString(), out tankdataTime)
-//                            && ("0" != (string)telemetry["rsrp"])
-//                            && ("0" != (string)telemetry["rsrq"])
-                            )
+                        if (DateTime.TryParse(tankdata["time"].ToString(), out DateTime tankdataTime))
                         {
                             //This message has the required values to be passed on to CPM
-
                             CommPkt.CPMessage cpMsg = new CPMessage();
                             StringBuilder sData = new StringBuilder();
 
@@ -173,7 +164,6 @@ namespace TankUtilityInterface
                 }
             }
 
-//            await Task.Delay(500);
         }
 
         #region Header Comments
@@ -289,9 +279,7 @@ namespace TankUtilityInterface
                 if (_messageReceiver != null && !_messageReceiver.IsClosedOrClosing)
                 {
                     await _messageReceiver.CloseAsync();
-                }
-
-               // Log.ErrorToFile(Properties.Settings.Default.LogFilePath + "\\TUI_DebugLog", "Message pump has been stopped.");               
+                }          
             }
             catch (Exception ex)
             {
