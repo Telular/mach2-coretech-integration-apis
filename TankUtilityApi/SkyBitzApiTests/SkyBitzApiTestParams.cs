@@ -12,6 +12,6 @@ namespace SkyBitzApiTests
         public const string GoodDeviceLongId = "002300163434383315473931";
         public const string BadDeviceShortId = "BADBADID";
         public const string BadDeviceLongId = "000000000000000000000000";
-        public const int LoopTestIterations = 50;
+        public const int LoopTestIterations = 5;
     }
 }

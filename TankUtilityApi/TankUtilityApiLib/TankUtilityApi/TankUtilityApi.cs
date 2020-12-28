@@ -26,7 +26,14 @@ namespace TankUtilityApiLib.TankUtilityApi
         private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore };
 
         private static ApiOauthConfiguration _apiConfig;
-        
+
+        private static readonly object _singletonLock = new object();
+
+        /// <summary>
+        /// Our singleton instance
+        /// </summary>
+        private static TankUtilityApi _singletonApi;
+
         #endregion Private fields
 
 
@@ -79,6 +86,32 @@ namespace TankUtilityApiLib.TankUtilityApi
         }
 
         #endregion Constructors     
+
+        #region Singleton_Access
+
+        /// <summary>
+        /// Access to the singleton instance
+        /// </summary>
+        public static TankUtilityApi Instance
+        {
+            get
+            {
+                if (_singletonApi == null)
+                {
+                    lock (_singletonLock)
+                    {
+                        if (_singletonApi == null)
+                        {
+                            _singletonApi = new TankUtilityApi();
+                        }
+                    }
+                }
+
+                return _singletonApi;
+            }
+        }
+
+        #endregion Singleton_Access
 
         #region Public Methods
         public async Task<TankUtilityApiResponse> GetDevicesAsync()
