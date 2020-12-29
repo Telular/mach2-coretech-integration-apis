@@ -27,7 +27,11 @@ namespace TankNotifierApiNet.Controllers
         private static readonly RedisCacheManager _redisCacheManager = RedisCacheManager.Instance;
         private static readonly ServiceBusTopicSender _serviceBusTopicSender = ServiceBusTopicSender.Instance;
         private static readonly TankUtilityApi _tankUtilityApi = TankUtilityApi.Instance;
-        private const string _cacheKeyPrefix = "tankUtility_cached_Id_";
+
+        private const string CACHE_KEY_PREFIX = "tankLinkNotifier_";
+        
+        // No longer used.  This key points to the concatenated common separated string value ("short TU key, long TU key")
+        //private const string _cacheKeyPrefix_OBSOLETE = "tankUtility_cached_Id_";
 
         #endregion
 
@@ -201,20 +205,21 @@ namespace TankNotifierApiNet.Controllers
             return SendResponse(apiResponse, HttpStatusCode.OK);
         }
 
-        
+
         private async Task<TankIdValidationResponse> ValidateTankId(string tankId)
         {
             TankIdValidationResponse validationResponse = new TankIdValidationResponse();
+            TankUtilityCacheDevice cacheEntry;
 
 
             try
             {
                 // Is there a cache entry for the given key.
-                var tankIdCacheEntry = _redisCacheManager.GetFromCache<string>($"{_cacheKeyPrefix}{tankId?.ToUpper()}");
+                var tankIdCacheEntry = _redisCacheManager.GetFromCache<TankUtilityCacheDevice>($"{CACHE_KEY_PREFIX}{tankId?.ToUpper()}");
 
-               
+
                 // if it's not in cache check Tank Utility via API or the cache entry is malformed.
-                if (string.IsNullOrWhiteSpace(tankIdCacheEntry))
+                if (tankIdCacheEntry == null)
                 {
                     // Get the device record from Tank Utility
                     var apiResponse = await _tankUtilityApi.GetDeviceAsync(tankId?.ToUpper());
@@ -222,6 +227,15 @@ namespace TankNotifierApiNet.Controllers
                     // Mark the validation response.
                     validationResponse.Success = apiResponse.Success;
                     validationResponse.ErrorMessage = apiResponse.ErrorMessage;
+
+                    cacheEntry = new TankUtilityCacheDevice
+                    {
+                        ShortTankId = tankId,
+                        LongTankId = tankId,
+                        IsValidTankId = false,
+                        ErrorMessage = validationResponse.ErrorMessage
+                    };
+
 
                     // if successfully retrieved from Tank Utility add both long and short id's to the cache.
                     if (validationResponse.Success)
@@ -233,21 +247,33 @@ namespace TankNotifierApiNet.Controllers
                             validationResponse.ShortTankId = (apiResponse.Data as DeviceResponse).Device.ShortDeviceId.ToUpper();
                             validationResponse.LongTankId = (apiResponse.Data as DeviceResponse).Device.DeviceId.ToUpper();
 
-                            // Store the cache key and data (data is a comma separated string pair formatted as:  "{tank short id},{tank long id}").
-                            _redisCacheManager.AddToCache($"{_cacheKeyPrefix}{validationResponse.ShortTankId}", $"{validationResponse.ShortTankId},{validationResponse.LongTankId}");
-                            _redisCacheManager.AddToCache($"{_cacheKeyPrefix}{validationResponse.LongTankId}", $"{validationResponse.ShortTankId},{validationResponse.LongTankId}");
+                            // Update the cache entry object with the "good" tank Id values.
+                            cacheEntry.ShortTankId = validationResponse.ShortTankId;
+                            cacheEntry.LongTankId = validationResponse.LongTankId;
+                            cacheEntry.IsValidTankId = validationResponse.Success;
+                        }
+                        else
+                        {
+                            cacheEntry.ErrorMessage = $"Tank Id:  {cacheEntry.ShortTankId}  Tank Utility API call indicated \"Success\" but did not return a valid \"Device Response\" object.";
                         }
                     }
+
+                    // Store the cache key and cache entry data.                    
+                    // If it's a valid tank Id entry then store the cache entry by the long id too in case we need to search by that id.
+                    if (cacheEntry.IsValidTankId)
+                    {
+                        _redisCacheManager.AddToCache($"{CACHE_KEY_PREFIX}{cacheEntry.ShortTankId.ToUpper()}", cacheEntry);
+                        _redisCacheManager.AddToCache($"{CACHE_KEY_PREFIX}{cacheEntry.LongTankId.ToUpper()}", cacheEntry);
+                    }                    
                 }
                 else
                 {
-                    // Split the cache entry.  Cach entry is a comma separated string pair formatted as:  "{tank short id},{tank long id}"
-                    var tankIds = tankIdCacheEntry.Split(',');
-                    // Make sure it has two strings.
-                    validationResponse.Success = (tankIds?.Length ?? 0) == 2;
-                    // Set the short and long id in the validation response.
-                    validationResponse.ShortTankId = tankIds[0];
-                    validationResponse.LongTankId = tankIds[1];
+                    // Get info from the cache entry.                      
+                    // Set the short and long id, and the "success" (IsValid) flag in the validation response.
+                    validationResponse.ShortTankId = tankIdCacheEntry.ShortTankId;
+                    validationResponse.LongTankId = tankIdCacheEntry.LongTankId;
+                    validationResponse.Success = tankIdCacheEntry.IsValidTankId;
+                    validationResponse.ErrorMessage = tankIdCacheEntry.ErrorMessage;
                 }
 
             }
@@ -255,7 +281,8 @@ namespace TankNotifierApiNet.Controllers
             {
                 _logger.Error($"Tank Id Validation:  Tank Id:  {tankId} - {anException.Message} {anException?.InnerException?.Message}");
 
-
+                validationResponse.ShortTankId = tankId;
+                validationResponse.LongTankId = tankId;
                 validationResponse.Success = false;
                 validationResponse.ErrorMessage = $"Tank Id Validation:  Tank Id:  {tankId} -  {anException.Message} {anException?.InnerException?.Message}";
             }

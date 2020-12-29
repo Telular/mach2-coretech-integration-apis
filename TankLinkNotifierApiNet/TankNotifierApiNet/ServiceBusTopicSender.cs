@@ -29,9 +29,11 @@ namespace TankNotifierApiNet
         {
             
             
-            ServiceBusConnectionStringBuilder connectionStringBuilder = new ServiceBusConnectionStringBuilder(ConfigurationManager.AppSettings["ServiceBusConnectionString"]);
-            // A precaution in case the connection string has a path included.
-            connectionStringBuilder.EntityPath = "";
+            ServiceBusConnectionStringBuilder connectionStringBuilder = new ServiceBusConnectionStringBuilder(ConfigurationManager.AppSettings["ServiceBusConnectionString"])
+            {
+                // A precaution in case the connection string has a path included.
+                EntityPath = ""
+            };
 
             string tankUtilityTopic = ConfigurationManager.AppSettings["TankUtilityTopic"];
             string tankUtilityReadingsSub = ConfigurationManager.AppSettings["ReadingsSubcription"];
@@ -78,7 +80,10 @@ namespace TankNotifierApiNet
             try
             {
                 string data = JsonConvert.SerializeObject(payload);
-                Message message = new Message(Encoding.UTF8.GetBytes(data));
+                Message message = new Message(Encoding.UTF8.GetBytes(data))
+                {
+                    ContentType = "application/json"
+                };
 
                 if (userProperties != null)
                 {
