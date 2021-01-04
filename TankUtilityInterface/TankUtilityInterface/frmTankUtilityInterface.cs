@@ -384,11 +384,52 @@ namespace TankUtilityInterface
                 }
                 catch (Exception ex1)
                 {
-                    this.tankReadingsReciever.AddlistViewStatusItem("bkgWorkerRx_DoWork, Unhandled Exception!: " + ex1.Message, Color.Red);
+                    AddlistViewStatusItem("bkgWorkerRx_DoWork: " + ex1.Message, Color.Red);
                 }
             }
         }
-         
+
+        private delegate void AddlistViewStatusItemDelegate(string sStatus, Color cText);
+
+        public void AddlistViewStatusItem(string sStatus, Color cText)
+        {
+            // If current thread is not the same as controls thread then invoke a delegate call
+            // Else just do it
+            if (this.listViewStatus.InvokeRequired == true)
+            {
+                this.listViewStatus.Invoke(new AddlistViewStatusItemDelegate(AddlistViewStatusItem), new object[] { sStatus, cText });
+            }
+            else
+            {
+                // If last item in list is visible then set autoscroll to true
+                bool bAutoScroll = (listViewStatus.Items.Count > 0
+                    && (listViewStatus.Height - listViewStatus.TopItem.Position.Y)
+                    > listViewStatus.Items[listViewStatus.Items.Count - 1].Position.Y);
+
+                ListViewItem item = new ListViewItem(DateTime.Now.ToString());
+                item.ForeColor = cText;
+                item.SubItems.Add(sStatus);
+                if (listViewStatus.Items.Count > 2000)
+                {
+                    listViewStatus.Items.RemoveAt(0);
+                }
+                listViewStatus.Items.Insert(listViewStatus.Items.Count, item);
+
+                // Make sure new item is visible if previous last item was visible
+                if (bAutoScroll)
+                {
+                    listViewStatus.Items[listViewStatus.Items.Count - 1].EnsureVisible();
+                }
+
+                // If Error message then copy it to error log file
+                if (Color.Red == cText)
+                {
+                    Log.ErrorToFile(Properties.Settings.Default.LogFilePath, "TankUtilityInterface :" + sStatus);
+                }
+
+            }
+        }
+
         private void bkgWorkerTx_DoWork(object sender, DoWorkEventArgs e)
         {
             CPMessage cpMsg;
