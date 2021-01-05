@@ -107,63 +107,60 @@ namespace TankUtilityInterface
 
 
         public void PrintPayloads(Payload payload)
-        {          
-            lock (Console.Out)
+        {                    
+            Dictionary<string, object> tankdata = payload.Data;
+
+            if (tankdata.ContainsKey("telemetry"))
             {
-                Dictionary<string, object> tankdata = payload.Data;
+                Dictionary<string, object> telemetry;
+                telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(tankdata["telemetry"].ToString());
 
-                if (tankdata.ContainsKey("telemetry"))
+                if (telemetry?.Count == 0) return;
+
+               if ((!String.IsNullOrWhiteSpace(payload.TankId))
+                    && (tankdata.ContainsKey("time"))
+                    && (tankdata.ContainsKey("percent"))
+                    && (telemetry.ContainsKey("rsrp"))
+                    && (telemetry.ContainsKey("rsrq"))
+                    )
                 {
-                    Dictionary<string, object> telemetry;
-                    telemetry = JsonConvert.DeserializeObject<Dictionary<string, object>>(tankdata["telemetry"].ToString());
-
-                    if (telemetry?.Count == 0) return;
-
-                    if ((String.IsNullOrWhiteSpace(payload.TankId))
-                        && (tankdata.ContainsKey("time"))
-                        && (tankdata.ContainsKey("percent"))
-                        && (telemetry.ContainsKey("rsrp"))
-                        && (telemetry.ContainsKey("rsrq"))
-                        )
+                    // This message has the required elements to be passed to CPM
+                    if (DateTime.TryParse(tankdata["time"].ToString(), out DateTime tankdataTime))
                     {
-                        // This message has the required elements to be passed to CPM
-                        if (DateTime.TryParse(tankdata["time"].ToString(), out DateTime tankdataTime))
+                        //This message has the required values to be passed on to CPM
+                        CommPkt.CPMessage cpMsg = new CPMessage();
+                        StringBuilder sData = new StringBuilder();
+
+                        sData.Append("[");
+                        sData.Append("PC,");
+                        sData.Append(tankdata["percent"]);
+
+                        // Create message object for queueing          
+                        cpMsg.dtUTCTimeStamp = tankdataTime;
+                        cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
+                        cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
+                        cpMsg.sSourceNumber = payload.TankId;
+                        cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
+                        cpMsg.iSequence = 0;
+                        cpMsg.iDataLen = sData.Length;
+                        cpMsg.iErrorCode = 0;
+                        cpMsg.iNetworkErrCode = 0;
+                        cpMsg.sData = sData.ToString();
+                        cpMsg.iSMPPChannelID = 0;
+
+                        try
                         {
-                            //This message has the required values to be passed on to CPM
-                            CommPkt.CPMessage cpMsg = new CPMessage();
-                            StringBuilder sData = new StringBuilder();
-
-                            sData.Append("[");
-                            sData.Append("PC,");
-                            sData.Append(tankdata["percent"]);
-
-                            // Create message object for queueing          
-                            cpMsg.dtUTCTimeStamp = tankdataTime;
-                            cpMsg.iSourceType = (int)CommPkt.Constants.SourceType.TUI;
-                            cpMsg.iDirectionType = (int)CommPkt.Constants.DirectionType.Rx;
-                            cpMsg.sSourceNumber = payload.TankId;
-                            cpMsg.iTranType = (int)CommPkt.Constants.TransType.Data;
-                            cpMsg.iSequence = 0;
-                            cpMsg.iDataLen = sData.Length;
-                            cpMsg.iErrorCode = 0;
-                            cpMsg.iNetworkErrCode = 0;
-                            cpMsg.sData = sData.ToString();
-                            cpMsg.iSMPPChannelID = 0;
-
-                            try
-                            {
-                                DeliverMessage(cpMsg);
-                            }
-                            catch (Exception ex)
-                            {
-                                AddlistViewStatusItem("PrintPayloads, DeliverMessage Exception!: " + ex.Message, Color.Red);
-                            }
+                            DeliverMessage(cpMsg);
                         }
-
+                        catch (Exception ex)
+                        {
+                            AddlistViewStatusItem("PrintPayloads, DeliverMessage Exception!: " + ex.Message, Color.Red);
+                        }
                     }
+
                 }
             }
-
+            
         }
 
         #region Header Comments
