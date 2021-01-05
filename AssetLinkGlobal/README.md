@@ -9,7 +9,7 @@ Compile and run it as is.
 
 ### AssetLinkBulkProvisioner
 
-Console application that takes a CSV file with ESN data in it and calls the AssetLinkApi to provision the device.  This application uses the AssetLinkApi library and does call the Mach2 CoreTech library since the devices may not exist yet.
+Console application that takes a CSV file with ESN data in it and calls the AssetLinkApi to provision the device.  This application uses the AssetLinkApi library to provision a satellite device.  Used for stand alone AssetLink devices that do not exist in Mach2 CoreTech as devices and therefore can't be provisioned thru the device management API.
 
 ### AssetLinkGlobalApiLib
 
