@@ -12,7 +12,7 @@ The API is NOT a REST API and has a very specific and very opinionated data retu
 
 ### TankLink Notifier API Net
 
-This is a .Net framework based web application that provides the REST interface for Tank Utility's corporation to POST tank readings and tank configuration changes to one of two REST API methods.
+This is a .Net framework based web application that provides the REST interface for Tank Utility corporation to POST tank readings and tank configuration changes to one of two REST API methods.
 
 ### Tank Utility API
 API to communicate with the Tank Utility Corporation tank monitoring system.  The REST API allows for setting tank configuration data and retrieving tank configuration and readings data.
