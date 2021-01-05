@@ -17,4 +17,4 @@ The (.NET 4.7.1) library that encapsulates the AssetLink API.
 
 ### AssetLinkGlobalTests
 
-Integration unit tests that exercise the AssetLink Global API.  All support methods are demonstrated including provisioning.  Provisioning tests are set to "Ignore" to keep from running them over and over.
+Integration unit tests that exercise the AssetLink Global API.  All supported methods are demonstrated including provisioning.  Provisioning tests are set to "Ignore" to keep from running them over and over.
