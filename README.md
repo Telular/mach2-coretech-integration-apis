@@ -4,7 +4,6 @@
 
 These are the API projects that are currently stored in this repo.
 
-
 ### Asset Link Global API
 
 API to communicate with the Asset Link Global system that will host the data links to satellite communication devices that will be utilized by a new class of Tank devices.
