@@ -1,16 +1,20 @@
 # Asset Link Global API
 
-.NET 4.7.1 DLL and an MS Unit Test project that illustrates how to call the API and get returned data in strongly typed .NET classes.
+.NET 4.7.1 DLL and an MS Unit Test project and bulk provisioning console app that illustrates how to call the API and get returned data in strongly typed .NET classes.
 
 ## Prerequisites
 
-Visual Studio 2017
+Visual Studio 2019
 Compile and run it as is.
 
 ### AssetLinkBulkProvisioner
 
+Console application that takes a CSV file with ESN data in it and calls the AssetLinkApi to provision the device.  This application uses the AssetLinkApi library and does call the Mach2 CoreTech library since the devices may not exist yet.
+
 ### AssetLinkGlobalApiLib
+
+The (.NET 4.7.1) library that encapsulates the AssetLink API.
 
 ### AssetLinkGlobalTests
 
-API to communicate with the Asset Link Global system that will host the data links to satellite communication devices that will be utilized by a new class of Tank devices.  The API is NOT a REST API and has a very specific and very opinionated data return layer.  That said the provided API provides the means to issue commands against the API "File" types of devices, groups (grp), moments, and remote.
+Integration unit tests that exercise the AssetLink Global API.  All support methods are demonstrated including provisioning.  Provisioning tests are set to "Ignore" to keep from running them over and over.
