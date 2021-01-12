@@ -109,7 +109,7 @@ namespace TankUtilityInterface
         public void PrintPayloads(Payload payload)
         {                    
             Dictionary<string, object> tankdata = payload.Data;
-
+           
             if (tankdata.ContainsKey("telemetry"))
             {
                 Dictionary<string, object> telemetry;
@@ -124,6 +124,7 @@ namespace TankUtilityInterface
                     && (telemetry.ContainsKey("rsrq"))
                     )
                 {
+                    int rsData = ProcessRSRQTelemetryData((telemetry["rsrq"]).ToString());
                     // This message has the required elements to be passed to CPM
                     if (DateTime.TryParse(tankdata["time"].ToString(), out DateTime tankdataTime))
                     {
@@ -134,6 +135,9 @@ namespace TankUtilityInterface
                         sData.Append("[");
                         sData.Append("PC,");
                         sData.Append(tankdata["percent"]);
+                        sData.Append(",");
+                        sData.Append("RS,");
+                        sData.Append(rsData);
 
                         // Create message object for queueing          
                         cpMsg.dtUTCTimeStamp = tankdataTime;
@@ -161,6 +165,41 @@ namespace TankUtilityInterface
                 }
             }
             
+        }
+
+        private int ProcessRSRQTelemetryData(string rsrqData)
+        {          
+            double rsrqnumber = 0.0;
+            if ((string.IsNullOrEmpty(rsrqData)) || (rsrqData == "0"))
+            {
+                return 0;
+            }
+            else if ((Double.TryParse(rsrqData, out rsrqnumber)))
+            {
+                if (rsrqnumber <= -22.0)
+                    return 1;
+                
+                if ((-22.0 < rsrqnumber) && (rsrqnumber <= -20.5 ))
+                    return 2;
+                if ((-20.5 < rsrqnumber) && (rsrqnumber <= -19.0))
+                    return 3;
+                if ((-19.0 < rsrqnumber) && (rsrqnumber <= -17.5))
+                    return 4;
+                if ((-17.5 < rsrqnumber) && (rsrqnumber  <= -16.0))
+                    return 5;
+                if ((-16.0 < rsrqnumber) && (rsrqnumber  <= -14.5))
+                    return 6;
+                if ((-14.5 < rsrqnumber) && (rsrqnumber <= -13.0 ))
+                    return 7;
+                if ((-13.0 < rsrqnumber) && (rsrqnumber  <= -11.5))
+                    return 8;
+                if ((-11.5 < rsrqnumber) && (rsrqnumber  <= -10.0))
+                    return 9;
+                if (-10.0 < rsrqnumber)
+                    return 10;
+            }
+           
+            return 0;
         }
 
         #region Header Comments
