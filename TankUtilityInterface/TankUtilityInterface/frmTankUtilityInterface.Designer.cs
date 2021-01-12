@@ -46,9 +46,9 @@
             // btnTest
             // 
             this.btnTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnTest.Location = new System.Drawing.Point(530, 32);
+            this.btnTest.Location = new System.Drawing.Point(662, 8);
             this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(75, 23);
+            this.btnTest.Size = new System.Drawing.Size(75, 29);
             this.btnTest.TabIndex = 51;
             this.btnTest.Text = "Test";
             this.btnTest.UseVisualStyleBackColor = true;
@@ -65,9 +65,9 @@
             this.listViewStatus.FullRowSelect = true;
             this.listViewStatus.HideSelection = false;
             this.listViewStatus.LabelEdit = true;
-            this.listViewStatus.Location = new System.Drawing.Point(47, 217);
+            this.listViewStatus.Location = new System.Drawing.Point(12, 287);
             this.listViewStatus.Name = "listViewStatus";
-            this.listViewStatus.Size = new System.Drawing.Size(706, 202);
+            this.listViewStatus.Size = new System.Drawing.Size(828, 238);
             this.listViewStatus.TabIndex = 50;
             this.listViewStatus.UseCompatibleStateImageBehavior = false;
             this.listViewStatus.View = System.Windows.Forms.View.Details;
@@ -96,9 +96,9 @@
             this.listViewMsg.FullRowSelect = true;
             this.listViewMsg.HideSelection = false;
             this.listViewMsg.LabelEdit = true;
-            this.listViewMsg.Location = new System.Drawing.Point(47, 64);
+            this.listViewMsg.Location = new System.Drawing.Point(12, 43);
             this.listViewMsg.Name = "listViewMsg";
-            this.listViewMsg.Size = new System.Drawing.Size(706, 136);
+            this.listViewMsg.Size = new System.Drawing.Size(828, 238);
             this.listViewMsg.TabIndex = 49;
             this.listViewMsg.UseCompatibleStateImageBehavior = false;
             this.listViewMsg.View = System.Windows.Forms.View.Details;
@@ -131,9 +131,9 @@
             // btnConfigInfo
             // 
             this.btnConfigInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnConfigInfo.Location = new System.Drawing.Point(644, 32);
+            this.btnConfigInfo.Location = new System.Drawing.Point(743, 8);
             this.btnConfigInfo.Name = "btnConfigInfo";
-            this.btnConfigInfo.Size = new System.Drawing.Size(109, 23);
+            this.btnConfigInfo.Size = new System.Drawing.Size(97, 29);
             this.btnConfigInfo.TabIndex = 48;
             this.btnConfigInfo.Text = "Config Info...";
             this.btnConfigInfo.UseVisualStyleBackColor = true;
@@ -151,7 +151,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(852, 532);
             this.Controls.Add(this.btnTest);
             this.Controls.Add(this.listViewStatus);
             this.Controls.Add(this.listViewMsg);
