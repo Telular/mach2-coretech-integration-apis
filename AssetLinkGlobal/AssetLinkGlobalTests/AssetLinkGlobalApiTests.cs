@@ -137,6 +137,54 @@ namespace AssetLinkGlobalTests
         }
 
         [TestMethod]
+        [Ignore]
+        [TestCategory(TestConstants.CATEGORY_UNIT)]
+        public async Task DeProvisionDevice()
+        {
+            // Use with absolute CAUTION.  
+            // This de-provisions a device on AssetLink.  The plan is removed and the device is set to DEACTIVE.
+            // Do NOT remove the "Ignore" tag unless you plan on de-provisioning a device manual.  Use the Carrier API.
+            try
+            {
+                var loginRepsponse = await assetLinkGlobalApi.Login();
+
+                Assert.IsTrue(loginRepsponse.Success, "Failed to Login.");
+
+                var apiRequest = new ApiRequest
+                {
+                    File = AssetLinkGlobal.ApiFileIdentifiers.DEVICE,
+                    Action = AssetLinkGlobal.ApiActionsIdentifiers.DEPROVISION,
+                    Filter = $"esn = '{AssetLinkGlobalTestParams.GoodEsnToo}'"
+                };
+
+                var response = await assetLinkGlobalApi.ProcessProvisioningRequest(apiRequest);
+
+                Assert.IsTrue(response != null);
+
+                Assert.IsTrue(response.Success, $"Device De-Provisioning Response Failed:  {response.ErrorTitle} - {response.ErrorMessage}");
+                Assert.IsTrue(response.Data != null);
+
+                Assert.IsTrue(response.Data.Any());
+
+                var aDeviceResult = response.Data.FirstOrDefault();
+
+                Assert.IsNotNull(aDeviceResult);
+
+                Assert.IsNotNull(aDeviceResult.Device);
+            }
+            catch (Exception anException)
+            {
+                Assert.Fail($"De-Provision Device Test Failure:  {anException.Message}  {(anException.InnerException != null ? anException.InnerException.Message : string.Empty)}");
+            }
+            finally
+            {
+                var logoutResponse = await assetLinkGlobalApi.Logout();
+
+                Assert.IsTrue(logoutResponse, "Failed to logout correctly.");
+            }
+        }
+
+        [TestMethod]
         [TestCategory(TestConstants.CATEGORY_UNIT)]
         public async Task GetDevices_UnFiltered()
         {
@@ -192,7 +240,7 @@ namespace AssetLinkGlobalTests
                 {
                     File = AssetLinkGlobal.ApiFileIdentifiers.DEVICE,
                     Action = AssetLinkGlobal.ApiActionsIdentifiers.GET,
-                    Filter = $"esn = '{AssetLinkGlobalTestParams.ProvisionEsn}'"
+                    Filter = $"esn = '{300534061244450}'"
                 };
 
 
@@ -1069,8 +1117,8 @@ namespace AssetLinkGlobalTests
                 {
                     File = AssetLinkGlobal.ApiFileIdentifiers.MOMMENT,
                     Action = AssetLinkGlobal.ApiActionsIdentifiers.GET,
-                    Filter = $"(esn = '{AssetLinkGlobalTestParams.GoodESNForMoData}') AND (Moment > {AssetLinkGlobalTestParams.GoodMomentIdForMoData})",
-                    Limit = 5
+                    Filter = $"(esn = '{300534061142140}')",
+                    Limit = 15
                 };
 
                 var response = await assetLinkGlobalApi.ProcessMomentsRequest(apiRequest);
